@@ -152,7 +152,7 @@ export const MapScreen = () => {
     if (appMode !== 'INSPECT' || !inspectedLocation) return null;
 
     return (
-      <View style={styles.inspectBottomBlock}>
+      <View style={[styles.inspectBottomBlock, { bottom: Math.max(insets.bottom + 10, 20) }]}>
         {isInspecting ? (
           <View style={styles.inspectLoadingRow}>
             <ActivityIndicator size="small" color="#F59E0B" />

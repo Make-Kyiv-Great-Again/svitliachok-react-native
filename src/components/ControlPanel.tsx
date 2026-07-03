@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppStore, TransportMode, RoutePreference } from '../store/useAppStore';
 
 interface ControlPanelProps {
@@ -11,6 +12,7 @@ interface ControlPanelProps {
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, onClear, onRebuild }) => {
+  const insets = useSafeAreaInsets();
   const { 
     transportMode, 
     setTransportMode, 
@@ -40,7 +42,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { bottom: Math.max(insets.bottom + 10, 20) }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Route Status Summary</Text>
       </View>
