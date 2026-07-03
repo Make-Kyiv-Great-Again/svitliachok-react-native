@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppStore, TransportMode, RoutePreference } from '../store/useAppStore';
+import { useTranslation } from 'react-i18next';
 
 interface ControlPanelProps {
   distance?: number;
@@ -19,6 +20,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
     routePreference, 
     setRoutePreference,
   } = useAppStore();
+  const { t } = useTranslation();
 
   const handleModeChange = (mode: TransportMode) => {
     setTransportMode(mode);
@@ -32,19 +34,19 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
   };
 
   const formatDistance = (meters?: number) => {
-    if (!meters) return '-- km';
-    return (meters / 1000).toFixed(1) + ' km';
+    if (!meters) return '-- ' + t('controlPanel.metrics.kilometers');
+    return (meters / 1000).toFixed(1) + ' ' + t('controlPanel.metrics.kilometers');
   };
 
   const formatTime = (seconds?: number) => {
-    if (!seconds) return '-- min';
-    return Math.ceil(seconds / 60) + ' min';
+    if (!seconds) return '-- ' + t('controlPanel.metrics.minutes');
+    return Math.ceil(seconds / 60) + ' ' + t('controlPanel.metrics.minutes');
   };
 
   return (
-    <View style={[styles.container, { bottom: Math.max(insets.bottom + 10, 20) }]}>
+    <View style={[styles.container, { bottom: Math.max(insets.bottom, 20) }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Route Status Summary</Text>
+        <Text style={styles.title}>{t('controlPanel.title')}</Text>
         <TouchableOpacity onPress={onClear} hitSlop={{top: 10, right: 10, bottom: 10, left: 10}}>
           <Ionicons name="close" size={24} color="#94a3b8" />
         </TouchableOpacity>
@@ -56,7 +58,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
           onPress={() => handleModeChange('Driving')}
         >
           <Ionicons name="car-outline" size={18} color={transportMode === 'Driving' ? '#F59E0B' : '#6b7280'} />
-          <Text style={[styles.modeText, transportMode === 'Driving' && styles.activeModeText]}>Driving</Text>
+          <Text style={[styles.modeText, transportMode === 'Driving' && styles.activeModeText]}>{t('controlPanel.mode.driving')}</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
@@ -64,18 +66,18 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
           onPress={() => handleModeChange('Walking')}
         >
           <Ionicons name="walk-outline" size={18} color={transportMode === 'Walking' ? '#F59E0B' : '#6b7280'} />
-          <Text style={[styles.modeText, transportMode === 'Walking' && styles.activeModeText]}>Walking</Text>
+          <Text style={[styles.modeText, transportMode === 'Walking' && styles.activeModeText]}>{t('controlPanel.mode.walking')}</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.statsBox}>
         <View style={styles.statsRow}>
           <View style={styles.statCol}>
-            <Text style={styles.statLabel}>DISTANCE</Text>
+            <Text style={styles.statLabel}>{t('controlPanel.metrics.distance').toUpperCase()}</Text>
             <Text style={styles.statValue}>{formatDistance(distance)}</Text>
           </View>
           <View style={styles.statCol}>
-            <Text style={styles.statLabel}>EST. TIME</Text>
+            <Text style={styles.statLabel}>{t('controlPanel.metrics.duration').toUpperCase()}</Text>
             <Text style={styles.statValue}>{formatTime(duration)}</Text>
           </View>
         </View>

@@ -1,0 +1,51 @@
+{
+  "map": {
+    "searchPlaceholder": "Search location...",
+    "modeInspect": "Inspect",
+    "modePaths": "Paths",
+    "inspectPrompt": "Tap anywhere on the map to inspect power status.",
+    "pathStart": "Tap on the map to set starting point",
+    "pathDest": "Tap on the map to set destination",
+    "errorNoData": "No data available for this location.",
+    "status": {
+      "on": "Active Power",
+      "off": "No Power",
+      "emergency": "Emergency Outage",
+      "unknown": "Status Unknown"
+    }
+  },
+  "controlPanel": {
+    "title": "Route Status Summary",
+    "clear": "Clear",
+    "rebuild": "Rebuild",
+    "mode": {
+      "driving": "Driving",
+      "walking": "Walking"
+    },
+    "preference": {
+      "fastest": "Fastest",
+      "illuminated": "Illuminated"
+    },
+    "metrics": {
+      "distance": "Distance:",
+      "duration": "Duration:",
+      "kilometers": "km",
+      "minutes": "mins",
+      "litPercent": "Lit Route:"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "lastSync": {
+      "title": "Last Data Sync",
+      "never": "Never",
+      "description": "Shows when the lighting status data was last pulled from the server."
+    },
+    "language": {
+      "title": "Language / Мова",
+      "en": "English",
+      "uk": "Українська",
+      "description": "Select the application language."
+    }
+  }
+}

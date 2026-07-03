@@ -1,0 +1,51 @@
+{
+  "map": {
+    "searchPlaceholder": "Пошук локації...",
+    "modeInspect": "Огляд",
+    "modePaths": "Маршрут",
+    "inspectPrompt": "Торкніться на карті, щоб дізнатися стан світла.",
+    "pathStart": "Торкніться карти, щоб задати стартову точку",
+    "pathDest": "Торкніться карти, щоб задати фініш",
+    "errorNoData": "Немає даних для цієї локації.",
+    "status": {
+      "on": "Є світло",
+      "off": "Немає світла",
+      "emergency": "Аварійне відключення",
+      "unknown": "Статус невідомий"
+    }
+  },
+  "controlPanel": {
+    "title": "Деталі маршруту",
+    "clear": "Очистити",
+    "rebuild": "Оновити",
+    "mode": {
+      "driving": "Авто",
+      "walking": "Пішки"
+    },
+    "preference": {
+      "fastest": "Найшвидший",
+      "illuminated": "Освітлений"
+    },
+    "metrics": {
+      "distance": "Відстань:",
+      "duration": "Тривалість:",
+      "kilometers": "км",
+      "minutes": "хв",
+      "litPercent": "Освітлено:"
+    }
+  },
+  "settings": {
+    "title": "Налаштування",
+    "lastSync": {
+      "title": "Останнє оновлення",
+      "never": "Ніколи",
+      "description": "Показує час останнього завантаження даних про світло з сервера."
+    },
+    "language": {
+      "title": "Мова / Language",
+      "en": "English",
+      "uk": "Українська",
+      "description": "Оберіть мову застосунку."
+    }
+  }
+}

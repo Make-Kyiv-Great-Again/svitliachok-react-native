@@ -10,6 +10,7 @@ import { calculateRoute } from '../utils/routing';
 import { fetchStatusByCoordinates } from '../api/client';
 import { useNavigation } from '@react-navigation/native';
 import { StatusResponse } from '../types/api';
+import { useTranslation } from 'react-i18next';
 
 const KYIV_CENTER = {
   latitude: 50.4501,
@@ -24,6 +25,7 @@ export const MapScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const { buildingPolygons, syncOutagesForRegion, transportMode, routePreference } = useAppStore();
+  const { t, i18n } = useTranslation();
   const [appMode, setAppMode] = useState<AppMode>('INSPECT');
   
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
@@ -140,7 +142,7 @@ export const MapScreen = () => {
           {
             headers: {
               'User-Agent': 'SvitliachokApp/1.0',
-              'Accept-Language': 'uk,en;q=0.9'
+              'Accept-Language': i18n.language.startsWith('uk') ? 'uk,en;q=0.9' : 'en,uk;q=0.9'
             }
           }
         );
@@ -181,7 +183,7 @@ export const MapScreen = () => {
         setInspectedStatus(statusResult);
       } catch (err: any) {
         console.error("Inspect error:", err);
-        setInspectError("No data available for this location.");
+        setInspectError(t('map.errorNoData'));
       } finally {
         setIsInspecting(false);
       }
@@ -216,7 +218,7 @@ export const MapScreen = () => {
         {isInspecting ? (
           <View style={styles.inspectLoadingRow}>
             <ActivityIndicator size="small" color="#F59E0B" />
-            <Text style={styles.inspectLoadingText}>Checking status...</Text>
+            <Text style={styles.inspectLoadingText}>...</Text>
           </View>
         ) : inspectError ? (
           <Text style={styles.inspectErrorText}>{inspectError}</Text>
@@ -226,9 +228,10 @@ export const MapScreen = () => {
             <View style={styles.inspectStatusRow}>
               <View style={[styles.statusDot, { backgroundColor: inspectedStatus.power_status === 'ON' ? '#F59E0B' : '#475569' }]} />
               <Text style={styles.inspectStatusText}>
-                Status: {inspectedStatus.power_status === 'ON' ? 'Active' : 
-                 inspectedStatus.power_status === 'OFF' ? 'No Power' : 
-                 inspectedStatus.power_status}
+                {inspectedStatus.power_status === 'ON' ? t('map.status.on') : 
+                 inspectedStatus.power_status === 'OFF' ? t('map.status.off') : 
+                 inspectedStatus.power_status === 'EMERGENCY' ? t('map.status.emergency') :
+                 t('map.status.unknown')}
               </Text>
             </View>
             {inspectedStatus.status_reason && (
@@ -260,7 +263,7 @@ export const MapScreen = () => {
               <Ionicons name="search" size={20} color="#94a3b8" style={styles.searchIconLeft} />
               <TextInput
                 style={styles.searchInputSingle}
-                placeholder="Search location (e.g. Obolon)"
+                placeholder={t('map.searchPlaceholder')}
                 placeholderTextColor="#94a3b8"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -295,13 +298,13 @@ export const MapScreen = () => {
                 style={[styles.modeButton, appMode === 'INSPECT' && styles.modeButtonActive]}
                 onPress={() => setAppMode('INSPECT')}
               >
-                <Text style={[styles.modeButtonText, appMode === 'INSPECT' && styles.modeButtonTextActive]}>Inspect</Text>
+                <Text style={[styles.modeButtonText, appMode === 'INSPECT' && styles.modeButtonTextActive]}>{t('map.modeInspect')}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.modeButton, appMode === 'ROUTING' && styles.modeButtonActive]}
                 onPress={() => setAppMode('ROUTING')}
               >
-                <Text style={[styles.modeButtonText, appMode === 'ROUTING' && styles.modeButtonTextActive]}>Paths</Text>
+                <Text style={[styles.modeButtonText, appMode === 'ROUTING' && styles.modeButtonTextActive]}>{t('map.modePaths')}</Text>
               </TouchableOpacity>
             </View>
             
@@ -317,10 +320,10 @@ export const MapScreen = () => {
         {appMode === 'ROUTING' && !isSearchOpen && (!selectedOrigin || !selectedDestination) && (
           <View style={styles.instructionContainer}>
             {!selectedOrigin && !selectedDestination && (
-              <Text style={styles.instructionText}>Tap on the map to set starting point</Text>
+              <Text style={styles.instructionText}>{t('map.pathStart')}</Text>
             )}
             {selectedOrigin && !selectedDestination && (
-              <Text style={styles.instructionText}>Tap on the map to set destination</Text>
+              <Text style={styles.instructionText}>{t('map.pathDest')}</Text>
             )}
           </View>
         )}

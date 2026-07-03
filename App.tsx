@@ -4,6 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MapScreen } from './src/screens/MapScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { StatusBar } from 'react-native';
+import './src/i18n';
 
 const Stack = createNativeStackNavigator();
 
