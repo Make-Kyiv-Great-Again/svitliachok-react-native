@@ -133,7 +133,18 @@ export const MapScreen = () => {
       }
       setIsSearching(true);
       try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery + ', Kyiv')}&format=json&limit=5&addressdetails=1`);
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery + ', Kyiv')}&format=json&limit=5&addressdetails=1`,
+          {
+            headers: {
+              'User-Agent': 'SvitliachokApp/1.0',
+              'Accept-Language': 'uk,en;q=0.9'
+            }
+          }
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         setSearchResults(data);
       } catch (error) {
