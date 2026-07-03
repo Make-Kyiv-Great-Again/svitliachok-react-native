@@ -350,7 +350,7 @@ export const MapScreen = () => {
         </View>
       )}
 
-      {appMode === 'ROUTING' && (
+      {appMode === 'ROUTING' && selectedOrigin && selectedDestination && (
         <ControlPanel
           distance={currentRoute.distance}
           duration={currentRoute.duration}
