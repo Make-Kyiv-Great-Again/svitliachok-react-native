@@ -103,7 +103,10 @@ export const fetchBuildingsInRegion = async (
                bestStatus = item.status;
              }
            });
-           status = bestStatus;
+            status = bestStatus;
+          }
+      }
+
       // MOCK DATA: Force statuses for testing purposes so the map is always populated.
       // If we don't have real data, fallback to a deterministic mock.
       if (status === 'UNKNOWN') {
