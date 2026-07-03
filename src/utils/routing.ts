@@ -118,10 +118,12 @@ export const calculateRoute = async (
         segments.push({ coordinates: currentSegmentCoords, status: currentSegmentStatus });
       }
 
-      let pathStatus: 'SAFE' | 'UNKNOWN' | 'DANGER' = 'UNKNOWN';
-      if (segments.some(s => s.status === 'DANGER')) pathStatus = 'DANGER';
-      else if (segments.some(s => s.status === 'SAFE')) pathStatus = 'SAFE';
-
+      let pathStatus: 'SAFE' | 'UNKNOWN' | 'DANGER' = 'SAFE';
+      if (segments.some(s => s.status === 'DANGER')) {
+        pathStatus = 'DANGER';
+      } else if (segments.some(s => s.status === 'UNKNOWN')) {
+        pathStatus = 'UNKNOWN';
+      }
       return {
         coordinates: formattedCoords,
         segments,
