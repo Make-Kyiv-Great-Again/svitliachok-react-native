@@ -19,12 +19,12 @@ const lightColors = {
 };
 
 const darkColors = {
-  background: '#0f172a',
-  surface: '#1e293b',
-  surfaceOpaque: 'rgba(30, 41, 59, 0.95)',
-  textPrimary: '#f8fafc',
-  textSecondary: '#94a3b8',
-  border: '#334155',
+  background: '#000000',
+  surface: '#1c1c1e',
+  surfaceOpaque: 'rgba(28, 28, 30, 0.95)',
+  textPrimary: '#ffffff',
+  textSecondary: '#8e8e93',
+  border: '#333333',
   primary: '#F59E0B',
   primaryDim: 'rgba(245, 158, 11, 0.3)',
   iconActive: '#F59E0B',

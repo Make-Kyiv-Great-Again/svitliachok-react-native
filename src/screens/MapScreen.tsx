@@ -250,10 +250,10 @@ export const MapScreen = () => {
       {/* Floating Settings Button */}
       {!isSearchOpen && (
         <TouchableOpacity 
-          style={[styles.settingsBtn, { top: Math.max(insets.top, 10), backgroundColor: colors.surfaceOpaque, shadowColor: colors.shadow }]}
+          style={[styles.settingsBtn, { top: Math.max(insets.top, 10), backgroundColor: '#111827', shadowColor: colors.shadow }]}
           onPress={() => navigation.navigate('Settings')}
         >
-          <Ionicons name="settings-outline" size={20} color={colors.textPrimary} />
+          <Ionicons name="settings-outline" size={20} color="#ffffff" />
         </TouchableOpacity>
       )}
 
@@ -298,37 +298,37 @@ export const MapScreen = () => {
             )}
           </View>
         ) : (
-          <View style={[styles.topBarWrapper, { backgroundColor: colors.surfaceOpaque, shadowColor: colors.shadow }]}>
-            <View style={[styles.topBar, { backgroundColor: colors.background, borderColor: colors.border }]}>
+          <View style={[styles.topBarWrapper, { backgroundColor: '#111827', shadowColor: colors.shadow }]}>
+            <View style={styles.topBar}>
               <TouchableOpacity 
                 style={[
                   styles.modeButton, 
-                  appMode === 'INSPECT' && [styles.modeButtonActive, { backgroundColor: colors.surface }]
+                  appMode === 'INSPECT' && [styles.modeButtonActive, { backgroundColor: '#1f2937' }]
                 ]}
                 onPress={() => setAppMode('INSPECT')}
               >
-                <Text style={[styles.modeButtonText, { color: colors.textSecondary }, appMode === 'INSPECT' && [styles.modeButtonTextActive, { color: colors.textPrimary }]]}>
+                <Text style={[styles.modeButtonText, { color: '#9ca3af' }, appMode === 'INSPECT' && [styles.modeButtonTextActive, { color: '#ffffff' }]]}>
                   {t('map.modeInspect')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[
                   styles.modeButton, 
-                  appMode === 'ROUTING' && [styles.modeButtonActive, { backgroundColor: colors.surface }]
+                  appMode === 'ROUTING' && [styles.modeButtonActive, { backgroundColor: '#1f2937' }]
                 ]}
                 onPress={() => setAppMode('ROUTING')}
               >
-                <Text style={[styles.modeButtonText, { color: colors.textSecondary }, appMode === 'ROUTING' && [styles.modeButtonTextActive, { color: colors.textPrimary }]]}>
+                <Text style={[styles.modeButtonText, { color: '#9ca3af' }, appMode === 'ROUTING' && [styles.modeButtonTextActive, { color: '#ffffff' }]]}>
                   {t('map.modePaths')}
                 </Text>
               </TouchableOpacity>
             </View>
             
             <TouchableOpacity 
-              style={[styles.searchIconBtn, { backgroundColor: colors.background, borderColor: colors.border }]} 
+              style={[styles.searchIconBtn, { backgroundColor: '#111827' }]} 
               onPress={() => setIsSearchOpen(true)}
             >
-              <Ionicons name="search" size={20} color={colors.textPrimary} />
+              <Ionicons name="search" size={20} color="#ffffff" />
             </TouchableOpacity>
           </View>
         )}
@@ -454,18 +454,12 @@ const styles = StyleSheet.create({
   settingsBtn: {
     position: 'absolute',
     right: 16,
-    zIndex: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    zIndex: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   map: {
     ...StyleSheet.absoluteFillObject,
@@ -481,46 +475,34 @@ const styles = StyleSheet.create({
   topBarWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: 30,
+    padding: 4,
   },
   topBar: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 20,
-    padding: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   modeButton: {
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 16,
+    borderRadius: 24,
   },
   modeButtonActive: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#1f2937',
   },
   modeButtonText: {
-    color: '#64748b',
+    color: '#9ca3af',
     fontWeight: '600',
   },
   modeButtonTextActive: {
-    color: '#fff',
+    color: '#ffffff',
   },
   searchIconBtn: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginLeft: 4,
   },
   searchBarContainer: {
     width: '90%',
