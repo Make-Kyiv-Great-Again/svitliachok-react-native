@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator, TouchableOpacity, SafeAreaView, TextInput, Keyboard } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, TouchableOpacity, TextInput, Keyboard } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView, { Marker, Polyline, Polygon, MapPressEvent, Region, Circle } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +20,7 @@ const KYIV_CENTER = {
 type AppMode = 'INSPECT' | 'ROUTING';
 
 export const MapScreen = () => {
+  const insets = useSafeAreaInsets();
   const { buildingPolygons, syncOutagesForRegion, transportMode, routePreference } = useAppStore();
   const [appMode, setAppMode] = useState<AppMode>('INSPECT');
   
@@ -181,7 +183,7 @@ export const MapScreen = () => {
   return (
     <View style={styles.container}>
       {/* Top Floating Bar */}
-      <SafeAreaView style={styles.topBarContainer}>
+      <View style={[styles.topBarContainer, { paddingTop: Math.max(insets.top, 10) }]}>
         {isSearchOpen ? (
           <View style={styles.searchBarContainer}>
             <TextInput
@@ -249,7 +251,7 @@ export const MapScreen = () => {
             )}
           </View>
         )}
-      </SafeAreaView>
+      </View>
 
       <MapView 
         style={styles.map}

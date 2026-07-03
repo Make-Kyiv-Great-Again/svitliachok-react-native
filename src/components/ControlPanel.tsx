@@ -43,9 +43,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Route Status Summary</Text>
-        <TouchableOpacity style={styles.clearBtn} onPress={onClear}>
-          <Text style={styles.clearText}>Clear</Text>
-        </TouchableOpacity>
       </View>
       
       <View style={styles.buttonRow}>
@@ -63,14 +60,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
         >
           <Ionicons name="walk-outline" size={18} color={transportMode === 'Walking' ? '#ea580c' : '#6b7280'} />
           <Text style={[styles.modeText, transportMode === 'Walking' && styles.activeModeText]}>Walking</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.modeButton, transportMode === 'Cycling' && styles.activeModeButton]}
-          onPress={() => handleModeChange('Cycling')}
-        >
-          <Ionicons name="bicycle-outline" size={18} color={transportMode === 'Cycling' ? '#ea580c' : '#6b7280'} />
-          <Text style={[styles.modeText, transportMode === 'Cycling' && styles.activeModeText]}>Cycling</Text>
         </TouchableOpacity>
       </View>
 
@@ -102,13 +91,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
           {routePreference === 'Illuminated' ? 'Switch to Fastest Route' : 'Avoid Blackouts & Rebuild'}
         </Text>
       </TouchableOpacity>
-      
-      <View style={styles.footerRow}>
-        <Ionicons name="bulb-outline" size={14} color="#9ca3af" />
-        <Text style={styles.footerText}>
-          Drag markers on the map to dynamically re-evaluate route segments.
-        </Text>
-      </View>
     </View>
   );
 };
@@ -130,7 +112,6 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
   },
@@ -138,17 +119,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '800',
     color: '#0f172a',
-  },
-  clearBtn: {
-    backgroundColor: '#f1f5f9',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  clearText: {
-    color: '#475569',
-    fontSize: 13,
-    fontWeight: '600',
   },
   buttonRow: {
     flexDirection: 'row',
@@ -224,30 +194,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   rebuildButton: {
-    backgroundColor: '#f59e0b', // Amber-500 matching the screenshot
+    backgroundColor: '#ea580c',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
     borderRadius: 16,
-    marginBottom: 16,
   },
   rebuildButtonText: {
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '700',
-  },
-  footerRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-    gap: 6,
-  },
-  footerText: {
-    color: '#9ca3af',
-    fontSize: 12,
-    textAlign: 'center',
-    flex: 1,
   }
 });

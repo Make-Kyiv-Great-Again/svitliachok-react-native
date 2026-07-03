@@ -5,7 +5,7 @@ import * as Network from 'expo-network';
 import { BuildingPolygon } from '../types/api';
 import { fetchBuildingsInRegion } from '../api/client';
 
-export type TransportMode = 'Driving' | 'Walking' | 'Cycling';
+export type TransportMode = 'Driving' | 'Walking';
 export type RoutePreference = 'Fastest' | 'Illuminated';
 
 interface AppState {
