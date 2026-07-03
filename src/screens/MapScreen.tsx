@@ -480,8 +480,7 @@ const styles = StyleSheet.create({
     height: 48,
   },
   topBar: {
-    flexDirection: 'row',
-    marginHorizontal: 2,
+    flexDirection: 'row'
   },
   modeButton: {
     height: 40,
