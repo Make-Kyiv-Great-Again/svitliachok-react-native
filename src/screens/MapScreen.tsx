@@ -247,13 +247,68 @@ export const MapScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <MapView 
+        style={styles.map}
+        initialRegion={KYIV_CENTER}
+        showsUserLocation={true}
+        onPress={handleMapPress}
+        onRegionChangeComplete={handleRegionChange}
+        userInterfaceStyle={colors.mapStyle}
+      >
+        {appMode === 'INSPECT' && inspectedLocation && (
+          <Marker coordinate={inspectedLocation}>
+            <View style={styles.inspectMarkerPin} />
+          </Marker>
+        )}
+
+        {/* Render Actual Building Polygons from API */}
+        {buildingPolygons.map((building) => {
+          let fillColor = 'rgba(148, 163, 184, 0.5)'; // Light Grey (Unknown)
+          let strokeColor = 'rgba(100, 116, 139, 0.8)';
+          
+          if (building.status === 'ON') {
+             fillColor = 'rgba(245, 158, 11, 0.7)'; // Orange
+             strokeColor = 'rgba(245, 158, 11, 1)';
+          } else if (building.status === 'OFF' || building.status === 'EMERGENCY') {
+             fillColor = 'rgba(30, 41, 59, 0.8)'; // Dark slate
+             strokeColor = 'rgba(15, 23, 42, 1)';
+          }
+
+          return (
+            <Polygon
+              key={`building-${building.id}`}
+              coordinates={building.coordinates}
+              fillColor={fillColor}
+              strokeColor={strokeColor}
+              strokeWidth={1}
+            />
+          );
+        })}
+
+        {appMode === 'ROUTING' && selectedOrigin && (
+          <Marker coordinate={selectedOrigin} title="Origin" pinColor="green" />
+        )}
+
+        {appMode === 'ROUTING' && selectedDestination && (
+          <Marker coordinate={selectedDestination} title="Destination" pinColor="blue" />
+        )}
+
+        {appMode === 'ROUTING' && currentRoute.coordinates.length > 0 && (
+          <Polyline
+            coordinates={currentRoute.coordinates}
+            strokeColor="#3b82f6"
+            strokeWidth={4}
+          />
+        )}
+      </MapView>
+
       {/* Floating Settings Button */}
       {!isSearchOpen && (
         <TouchableOpacity 
-          style={[styles.settingsBtn, { top: Math.max(insets.top, 10), backgroundColor: '#111827', shadowColor: colors.shadow }]}
+          style={[styles.settingsBtn, { top: Math.max(insets.top, 10), backgroundColor: colors.surface, shadowColor: colors.shadow }]}
           onPress={() => navigation.navigate('Settings')}
         >
-          <Ionicons name="settings-outline" size={20} color="#ffffff" />
+          <Ionicons name="settings-outline" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
       )}
 
@@ -298,37 +353,37 @@ export const MapScreen = () => {
             )}
           </View>
         ) : (
-          <View style={[styles.topBarWrapper, { backgroundColor: '#111827', shadowColor: colors.shadow }]}>
+          <View style={[styles.topBarWrapper, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
             <View style={styles.topBar}>
               <TouchableOpacity 
                 style={[
                   styles.modeButton, 
-                  appMode === 'INSPECT' && [styles.modeButtonActive, { backgroundColor: '#1f2937' }]
+                  appMode === 'INSPECT' && [styles.modeButtonActive, { backgroundColor: colors.background }]
                 ]}
                 onPress={() => setAppMode('INSPECT')}
               >
-                <Text style={[styles.modeButtonText, { color: '#9ca3af' }, appMode === 'INSPECT' && [styles.modeButtonTextActive, { color: '#ffffff' }]]}>
+                <Text style={[styles.modeButtonText, { color: colors.textSecondary }, appMode === 'INSPECT' && [styles.modeButtonTextActive, { color: colors.textPrimary }]]}>
                   {t('map.modeInspect')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[
                   styles.modeButton, 
-                  appMode === 'ROUTING' && [styles.modeButtonActive, { backgroundColor: '#1f2937' }]
+                  appMode === 'ROUTING' && [styles.modeButtonActive, { backgroundColor: colors.background }]
                 ]}
                 onPress={() => setAppMode('ROUTING')}
               >
-                <Text style={[styles.modeButtonText, { color: '#9ca3af' }, appMode === 'ROUTING' && [styles.modeButtonTextActive, { color: '#ffffff' }]]}>
+                <Text style={[styles.modeButtonText, { color: colors.textSecondary }, appMode === 'ROUTING' && [styles.modeButtonTextActive, { color: colors.textPrimary }]]}>
                   {t('map.modePaths')}
                 </Text>
               </TouchableOpacity>
             </View>
             
             <TouchableOpacity 
-              style={[styles.searchIconBtn, { backgroundColor: '#111827' }]} 
+              style={[styles.searchIconBtn, { backgroundColor: colors.surface }]} 
               onPress={() => setIsSearchOpen(true)}
             >
-              <Ionicons name="search" size={20} color="#ffffff" />
+              <Ionicons name="search" size={20} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
         )}
@@ -344,63 +399,6 @@ export const MapScreen = () => {
           </View>
         )}
       </View>
-
-      <MapView 
-        style={styles.map}
-        initialRegion={KYIV_CENTER}
-        showsUserLocation={true}
-        onPress={handleMapPress}
-        onRegionChangeComplete={handleRegionChange}
-        userInterfaceStyle={colors.mapStyle}
-      >
-        {appMode === 'INSPECT' && inspectedLocation && (
-          <Marker coordinate={inspectedLocation}>
-            <View style={styles.inspectMarkerPin} />
-          </Marker>
-        )}
-
-
-
-        {/* Render Actual Building Polygons from API */}
-        {buildingPolygons.map((building) => {
-          let fillColor = 'rgba(148, 163, 184, 0.5)'; // Light Grey (Unknown)
-          let strokeColor = 'rgba(100, 116, 139, 0.8)';
-          
-          if (building.status === 'ON') {
-             fillColor = 'rgba(245, 158, 11, 0.7)'; // Orange
-             strokeColor = 'rgba(245, 158, 11, 1)';
-          } else if (building.status === 'OFF' || building.status === 'EMERGENCY') {
-             fillColor = 'rgba(30, 41, 59, 0.8)'; // Dark slate
-             strokeColor = 'rgba(15, 23, 42, 1)';
-          }
-
-          return (
-            <Polygon
-              key={`building-${building.id}`}
-              coordinates={building.coordinates}
-              fillColor={fillColor}
-              strokeColor={strokeColor}
-              strokeWidth={1}
-            />
-          );
-        })}
-
-        {appMode === 'ROUTING' && selectedOrigin && (
-          <Marker coordinate={selectedOrigin} title="Origin" pinColor="green" />
-        )}
-
-        {appMode === 'ROUTING' && selectedDestination && (
-          <Marker coordinate={selectedDestination} title="Destination" pinColor="blue" />
-        )}
-
-        {appMode === 'ROUTING' && currentRoute.coordinates.length > 0 && (
-          <Polyline
-            coordinates={currentRoute.coordinates}
-            strokeColor="#3b82f6"
-            strokeWidth={4}
-          />
-        )}
-      </MapView>
       
       {isLoadingRoute && (
         <View style={styles.loadingOverlay}>
