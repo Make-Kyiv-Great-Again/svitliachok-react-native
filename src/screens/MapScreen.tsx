@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator, TouchableOpacity, SafeAreaView } from 'react-native';
-import MapView, { Marker, Polyline, Polygon, MapPressEvent, Region, Callout, Circle } from 'react-native-maps';
+import { StyleSheet, View, Text, ActivityIndicator, TouchableOpacity, SafeAreaView, TextInput, Keyboard } from 'react-native';
+import MapView, { Marker, Polyline, Polygon, MapPressEvent, Region, Circle } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppStore } from '../store/useAppStore';
 import { ControlPanel } from '../components/ControlPanel';
 import { calculateRoute } from '../utils/routing';
-import { darkMapStyle } from '../utils/mapStyle';
 import { fetchStatusByCoordinates } from '../api/client';
 import { StatusResponse } from '../types/api';
 
@@ -31,6 +31,12 @@ export const MapScreen = () => {
   const [currentRoute, setCurrentRoute] = useState<{latitude: number, longitude: number}[]>([]);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
   
+  // Search UI State
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchOrigin, setSearchOrigin] = useState('');
+  const [searchDest, setSearchDest] = useState('');
+  const [isGeocoding, setIsGeocoding] = useState(false);
+
   // Inspect State
   const [inspectedLocation, setInspectedLocation] = useState<{latitude: number, longitude: number} | null>(null);
   const [inspectedStatus, setInspectedStatus] = useState<StatusResponse | null>(null);
@@ -66,6 +72,11 @@ export const MapScreen = () => {
   }, [selectedOrigin, selectedDestination, transportMode, routePreference, buildingPolygons, appMode]);
 
   const handleMapPress = async (e: MapPressEvent) => {
+    if (isSearchOpen) {
+      setIsSearchOpen(false);
+      Keyboard.dismiss();
+    }
+
     const coord = e.nativeEvent.coordinate;
     
     if (appMode === 'INSPECT') {
@@ -108,53 +119,58 @@ export const MapScreen = () => {
     setIsFetchingBuildings(false);
   };
 
-  const toggleMode = () => {
-    if (appMode === 'INSPECT') {
-      setAppMode('ROUTING');
-      setInspectedLocation(null);
-      setInspectedStatus(null);
-    } else {
-      setAppMode('INSPECT');
-      setSelectedOrigin(null);
-      setSelectedDestination(null);
-      setCurrentRoute([]);
+  const executeSearch = async () => {
+    Keyboard.dismiss();
+    if (!searchOrigin || !searchDest) return;
+
+    setIsGeocoding(true);
+    try {
+      const originResult = await Location.geocodeAsync(searchOrigin);
+      const destResult = await Location.geocodeAsync(searchDest);
+
+      if (originResult.length > 0 && destResult.length > 0) {
+        setSelectedOrigin({ latitude: originResult[0].latitude, longitude: originResult[0].longitude });
+        setSelectedDestination({ latitude: destResult[0].latitude, longitude: destResult[0].longitude });
+        setIsSearchOpen(false);
+      } else {
+        alert("Could not find one of the locations.");
+      }
+    } catch (e) {
+      alert("Error searching for locations.");
+    } finally {
+      setIsGeocoding(false);
     }
   };
 
-  const renderInspectMarker = () => {
-    if (!inspectedLocation) return null;
-    
+  const renderInspectBottomBlock = () => {
+    if (appMode !== 'INSPECT' || !inspectedLocation) return null;
+
     return (
-      <Marker coordinate={inspectedLocation}>
-        <View style={styles.inspectMarkerPin} />
-        <Callout tooltip>
-          <View style={styles.calloutContainer}>
-            {isInspecting ? (
-              <View style={styles.calloutLoading}>
-                <ActivityIndicator size="small" color="#ea580c" />
-                <Text style={styles.calloutText}>Checking status...</Text>
-              </View>
-            ) : inspectError ? (
-              <Text style={styles.calloutError}>{inspectError}</Text>
-            ) : inspectedStatus ? (
-              <View>
-                <Text style={styles.calloutTitle}>{inspectedStatus.address || 'Address Unknown'}</Text>
-                <View style={styles.calloutStatusRow}>
-                  <View style={[styles.statusDot, { backgroundColor: inspectedStatus.power_status === 'ON' ? '#ea580c' : '#111827' }]} />
-                  <Text style={styles.calloutStatusText}>
-                    {inspectedStatus.power_status === 'ON' ? 'POWER ON' : 
-                     inspectedStatus.power_status === 'OFF' ? 'POWER OFF' : 
-                     inspectedStatus.power_status}
-                  </Text>
-                </View>
-                {inspectedStatus.status_reason && (
-                  <Text style={styles.calloutSubtext}>{inspectedStatus.status_reason}</Text>
-                )}
-              </View>
-            ) : null}
+      <View style={styles.inspectBottomBlock}>
+        {isInspecting ? (
+          <View style={styles.inspectLoadingRow}>
+            <ActivityIndicator size="small" color="#ea580c" />
+            <Text style={styles.inspectLoadingText}>Checking status...</Text>
           </View>
-        </Callout>
-      </Marker>
+        ) : inspectError ? (
+          <Text style={styles.inspectErrorText}>{inspectError}</Text>
+        ) : inspectedStatus ? (
+          <View>
+            <Text style={styles.inspectTitle}>{inspectedStatus.address || 'Address Unknown'}</Text>
+            <View style={styles.inspectStatusRow}>
+              <View style={[styles.statusDot, { backgroundColor: inspectedStatus.power_status === 'ON' ? '#ea580c' : '#475569' }]} />
+              <Text style={styles.inspectStatusText}>
+                Status: {inspectedStatus.power_status === 'ON' ? 'Active' : 
+                 inspectedStatus.power_status === 'OFF' ? 'No Power' : 
+                 inspectedStatus.power_status}
+              </Text>
+            </View>
+            {inspectedStatus.status_reason && (
+              <Text style={styles.inspectSubtext}>{inspectedStatus.status_reason}</Text>
+            )}
+          </View>
+        ) : null}
+      </View>
     );
   };
 
@@ -162,22 +178,64 @@ export const MapScreen = () => {
     <View style={styles.container}>
       {/* Top Floating Bar */}
       <SafeAreaView style={styles.topBarContainer}>
-        <View style={styles.topBar}>
-          <TouchableOpacity 
-            style={[styles.modeButton, appMode === 'INSPECT' && styles.modeButtonActive]}
-            onPress={() => setAppMode('INSPECT')}
-          >
-            <Text style={[styles.modeButtonText, appMode === 'INSPECT' && styles.modeButtonTextActive]}>Inspect</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.modeButton, appMode === 'ROUTING' && styles.modeButtonActive]}
-            onPress={() => setAppMode('ROUTING')}
-          >
-            <Text style={[styles.modeButtonText, appMode === 'ROUTING' && styles.modeButtonTextActive]}>Paths</Text>
-          </TouchableOpacity>
-        </View>
+        {isSearchOpen ? (
+          <View style={styles.searchBarContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Origin (e.g. Khreshchatyk 1)"
+              placeholderTextColor="#94a3b8"
+              value={searchOrigin}
+              onChangeText={setSearchOrigin}
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Destination (e.g. Podil)"
+              placeholderTextColor="#94a3b8"
+              value={searchDest}
+              onChangeText={setSearchDest}
+            />
+            <View style={styles.searchButtonsRow}>
+              <TouchableOpacity style={styles.searchCancelBtn} onPress={() => setIsSearchOpen(false)}>
+                <Text style={styles.searchCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.searchSubmitBtn} onPress={executeSearch}>
+                {isGeocoding ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.searchSubmitText}>Search Paths</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.topBarWrapper}>
+            <View style={styles.topBar}>
+              <TouchableOpacity 
+                style={[styles.modeButton, appMode === 'INSPECT' && styles.modeButtonActive]}
+                onPress={() => setAppMode('INSPECT')}
+              >
+                <Text style={[styles.modeButtonText, appMode === 'INSPECT' && styles.modeButtonTextActive]}>Inspect</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.modeButton, appMode === 'ROUTING' && styles.modeButtonActive]}
+                onPress={() => setAppMode('ROUTING')}
+              >
+                <Text style={[styles.modeButtonText, appMode === 'ROUTING' && styles.modeButtonTextActive]}>Paths</Text>
+              </TouchableOpacity>
+            </View>
+            
+            {appMode === 'ROUTING' && (
+              <TouchableOpacity 
+                style={styles.searchIconBtn} 
+                onPress={() => setIsSearchOpen(true)}
+              >
+                <Ionicons name="search" size={20} color="#1e293b" />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
         
-        {appMode === 'ROUTING' && (
+        {appMode === 'ROUTING' && !isSearchOpen && (
           <View style={styles.instructionContainer}>
             {!selectedOrigin && !selectedDestination && (
               <Text style={styles.instructionText}>Tap on the map to set starting point</Text>
@@ -195,17 +253,20 @@ export const MapScreen = () => {
         showsUserLocation={true}
         onPress={handleMapPress}
         onRegionChangeComplete={handleRegionChange}
-        userInterfaceStyle="dark"
-        customMapStyle={darkMapStyle}
+        userInterfaceStyle="light"
       >
-        {appMode === 'INSPECT' && renderInspectMarker()}
+        {appMode === 'INSPECT' && inspectedLocation && (
+          <Marker coordinate={inspectedLocation}>
+            <View style={styles.inspectMarkerPin} />
+          </Marker>
+        )}
 
         {appMode === 'ROUTING' && selectedOrigin && (
           <Circle
             center={selectedOrigin}
             radius={1000} // 1km radius
             fillColor="transparent"
-            strokeColor="rgba(251, 146, 60, 0.8)" // Orange
+            strokeColor="rgba(234, 88, 12, 0.6)" // Orange
             strokeWidth={1.5}
             lineDashPattern={[5, 5]}
           />
@@ -213,15 +274,15 @@ export const MapScreen = () => {
 
         {/* Render Actual Building Polygons from API */}
         {buildingPolygons.map((building) => {
-          let fillColor = 'rgba(75, 85, 99, 0.5)'; // Grey (Unknown)
-          let strokeColor = 'rgba(75, 85, 99, 0.8)';
+          let fillColor = 'rgba(148, 163, 184, 0.5)'; // Light Grey (Unknown)
+          let strokeColor = 'rgba(100, 116, 139, 0.8)';
           
           if (building.status === 'ON') {
-             fillColor = 'rgba(234, 88, 12, 0.8)'; // Orange
-             strokeColor = 'rgba(251, 146, 60, 1)';
+             fillColor = 'rgba(234, 88, 12, 0.7)'; // Orange
+             strokeColor = 'rgba(234, 88, 12, 1)';
           } else if (building.status === 'OFF' || building.status === 'EMERGENCY') {
-             fillColor = 'rgba(17, 24, 39, 0.95)'; // Black
-             strokeColor = 'rgba(55, 65, 81, 1)';
+             fillColor = 'rgba(30, 41, 59, 0.8)'; // Dark slate
+             strokeColor = 'rgba(15, 23, 42, 1)';
           }
 
           return (
@@ -247,7 +308,7 @@ export const MapScreen = () => {
           <Polyline
             coordinates={currentRoute}
             strokeColor="#3b82f6"
-            strokeWidth={5}
+            strokeWidth={4}
           />
         )}
       </MapView>
@@ -273,6 +334,8 @@ export const MapScreen = () => {
       )}
 
       {appMode === 'ROUTING' && <ControlPanel />}
+      
+      {renderInspectBottomBlock()}
     </View>
   );
 };
@@ -280,6 +343,7 @@ export const MapScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f8fafc',
   },
   map: {
     ...StyleSheet.absoluteFillObject,
@@ -292,16 +356,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 10,
   },
+  topBarWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   topBar: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(30, 41, 59, 0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     padding: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 5,
+    elevation: 3,
   },
   modeButton: {
     paddingVertical: 8,
@@ -312,21 +380,87 @@ const styles = StyleSheet.create({
     backgroundColor: '#ea580c',
   },
   modeButtonText: {
-    color: '#94a3b8',
+    color: '#64748b',
     fontWeight: '600',
   },
   modeButtonTextActive: {
     color: '#fff',
   },
+  searchIconBtn: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  searchBarContainer: {
+    width: '90%',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  searchInput: {
+    backgroundColor: '#f1f5f9',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 10,
+    color: '#0f172a',
+    fontSize: 14,
+  },
+  searchButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  searchCancelBtn: {
+    marginRight: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  searchCancelText: {
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  searchSubmitBtn: {
+    backgroundColor: '#ea580c',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  searchSubmitText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
   instructionContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   instructionText: {
-    color: 'white',
+    color: '#334155',
     fontWeight: '600',
     fontSize: 12,
   },
@@ -334,10 +468,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '40%',
     alignSelf: 'center',
-    backgroundColor: 'rgba(30, 41, 59, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     padding: 20,
     borderRadius: 12,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   loadingText: {
     marginTop: 10,
@@ -348,11 +487,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 90,
     right: 20,
-    backgroundColor: 'rgba(30, 41, 59, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     padding: 10,
     borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   fetchingText: {
     marginLeft: 8,
@@ -362,7 +506,7 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 150,
     left: 20,
     right: 20,
     backgroundColor: 'rgba(239, 68, 68, 0.9)',
@@ -378,54 +522,67 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    backgroundColor: 'rgba(234, 88, 12, 0.3)',
     borderWidth: 3,
     borderColor: '#ea580c',
   },
-  calloutContainer: {
-    width: 200,
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
-    padding: 12,
+  inspectBottomBlock: {
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
+    width: '90%',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 8,
   },
-  calloutLoading: {
+  inspectLoadingRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
   },
-  calloutText: {
-    color: '#f8fafc',
-    marginLeft: 8,
-    fontSize: 14,
+  inspectLoadingText: {
+    color: '#64748b',
+    marginLeft: 10,
+    fontSize: 15,
+    fontWeight: '500',
   },
-  calloutError: {
-    color: '#fca5a5',
-    fontSize: 14,
+  inspectErrorText: {
+    color: '#ef4444',
+    fontSize: 15,
+    textAlign: 'center',
+    fontWeight: '500',
   },
-  calloutTitle: {
-    color: '#f8fafc',
-    fontSize: 14,
+  inspectTitle: {
+    color: '#0f172a',
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
   },
-  calloutStatusRow: {
+  inspectStatusRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 6,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
   },
-  calloutStatusText: {
-    color: '#cbd5e1',
-    fontSize: 13,
+  inspectStatusText: {
+    color: '#334155',
+    fontSize: 15,
     fontWeight: '600',
   },
-  calloutSubtext: {
-    color: '#94a3b8',
-    fontSize: 11,
+  inspectSubtext: {
+    color: '#64748b',
+    fontSize: 13,
     marginTop: 4,
   },
 });
