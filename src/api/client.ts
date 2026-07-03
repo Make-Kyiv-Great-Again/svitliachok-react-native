@@ -105,6 +105,15 @@ export const fetchBuildingsInRegion = async (
          }
       }
       
+      // MOCK DATA: Force some streets to be OFF for testing purposes
+      // This ensures there are always dark zones on the map to test the "Avoid Blackouts" feature.
+      if (street) {
+        const streetHash = street.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+        if (streetHash % 4 === 0) {
+           status = 'OFF';
+        }
+      }
+      
       const coordinates = b.geometry.map((pt: any) => ({ latitude: pt.lat, longitude: pt.lon }));
       
       return {
