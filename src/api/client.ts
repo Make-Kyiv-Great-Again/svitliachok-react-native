@@ -20,12 +20,14 @@ export const fetchBuildingsInRegion = async (
 ): Promise<BuildingPolygon[]> => {
   try {
     const query = `[out:json];way(${south},${west},${north},${east})["addr:housenumber"]["addr:street"];out geom;`;
-    // We can use one of the instances
-    const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+    const overpassUrl = 'https://overpass-api.de/api/interpreter';
+    const response = await axios.post(overpassUrl, `data=${encodeURIComponent(query)}`, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
     
-    const response = await fetch(overpassUrl);
-    if (!response.ok) throw new Error("Overpass API failed");
-    const data = await response.json();
+    const data = response.data;
     const elements = data.elements || [];
     
     if (elements.length === 0) return [];

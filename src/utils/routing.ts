@@ -31,7 +31,7 @@ export const calculateRoute = async (
         const midLat = (origin.latitude + destination.latitude) / 2;
         const midLon = (origin.longitude + destination.longitude) / 2;
         
-        buildingPolygons.forEach(zone => {
+        for (const zone of buildingPolygons) {
           if (zone.status === 'OFF' || zone.status === 'EMERGENCY') {
             if (zone.coordinates.length > 0) {
               const pt = zone.coordinates[0];
@@ -42,7 +42,7 @@ export const calculateRoute = async (
               }
             }
           }
-        });
+        }
         
         // Detour
         if (closestZoneDistance < 0.02 && closestZone && closestZone.coordinates.length > 0) {
