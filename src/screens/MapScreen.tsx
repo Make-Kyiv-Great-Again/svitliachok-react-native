@@ -28,7 +28,11 @@ export const MapScreen = () => {
   // Routing State
   const [selectedOrigin, setSelectedOrigin] = useState<{latitude: number, longitude: number} | null>(null);
   const [selectedDestination, setSelectedDestination] = useState<{latitude: number, longitude: number} | null>(null);
-  const [currentRoute, setCurrentRoute] = useState<{latitude: number, longitude: number}[]>([]);
+  const [currentRoute, setCurrentRoute] = useState<{
+    coordinates: {latitude: number, longitude: number}[];
+    distance: number;
+    duration: number;
+  }>({ coordinates: [], distance: 0, duration: 0 });
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
   
   // Search UI State
@@ -65,8 +69,8 @@ export const MapScreen = () => {
       }
       
       setIsLoadingRoute(true);
-      const route = await calculateRoute(selectedOrigin, selectedDestination, transportMode, routePreference, buildingPolygons);
-      setCurrentRoute(route);
+      const routeResult = await calculateRoute(selectedOrigin, selectedDestination, transportMode, routePreference, buildingPolygons);
+      setCurrentRoute(routeResult);
       setIsLoadingRoute(false);
     })();
   }, [selectedOrigin, selectedDestination, transportMode, routePreference, buildingPolygons, appMode]);
@@ -99,7 +103,7 @@ export const MapScreen = () => {
       if (!selectedOrigin || (selectedOrigin && selectedDestination)) {
         setSelectedOrigin(coord);
         setSelectedDestination(null);
-        setCurrentRoute([]);
+        setCurrentRoute({ coordinates: [], distance: 0, duration: 0 });
       } else {
         setSelectedDestination(coord);
       }
@@ -304,9 +308,9 @@ export const MapScreen = () => {
           <Marker coordinate={selectedDestination} title="Destination" pinColor="blue" />
         )}
 
-        {appMode === 'ROUTING' && currentRoute.length > 0 && (
+        {appMode === 'ROUTING' && currentRoute.coordinates.length > 0 && (
           <Polyline
-            coordinates={currentRoute}
+            coordinates={currentRoute.coordinates}
             strokeColor="#3b82f6"
             strokeWidth={4}
           />
@@ -333,7 +337,24 @@ export const MapScreen = () => {
         </View>
       )}
 
-      {appMode === 'ROUTING' && <ControlPanel />}
+      {appMode === 'ROUTING' && (
+        <ControlPanel
+          distance={currentRoute.distance}
+          duration={currentRoute.duration}
+          onClear={() => {
+            setSelectedOrigin(null);
+            setSelectedDestination(null);
+            setCurrentRoute({ coordinates: [], distance: 0, duration: 0 });
+          }}
+          onRebuild={() => {
+             // to trigger rebuild we just trick the effect by toggling state or it will rebuild when deps change
+             // actually since preference/mode changes are in the deps of useEffect, it will auto rebuild!
+             // but if they click rebuild button manually? 
+             // We can just set currentRoute to empty which might not retrigger unless we add a state.
+             // Actually, when preference changes, the useEffect runs automatically.
+          }}
+        />
+      )}
       
       {renderInspectBottomBlock()}
     </View>

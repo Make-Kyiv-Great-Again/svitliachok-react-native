@@ -5,7 +5,7 @@ import * as Network from 'expo-network';
 import { BuildingPolygon } from '../types/api';
 import { fetchBuildingsInRegion } from '../api/client';
 
-export type TransportMode = 'Car' | 'Pedestrian';
+export type TransportMode = 'Driving' | 'Walking' | 'Cycling';
 export type RoutePreference = 'Fastest' | 'Illuminated';
 
 interface AppState {
@@ -15,6 +15,7 @@ interface AppState {
   isSyncing: boolean;
   transportMode: TransportMode;
   routePreference: RoutePreference;
+
   
   setOnlineStatus: (status: boolean) => void;
   setTransportMode: (mode: TransportMode) => void;
@@ -29,7 +30,7 @@ export const useAppStore = create<AppState>()(
       lastSyncTime: null,
       isOnline: true,
       isSyncing: false,
-      transportMode: 'Car',
+      transportMode: 'Driving',
       routePreference: 'Fastest',
 
       setOnlineStatus: (status: boolean) => set({ isOnline: status }),

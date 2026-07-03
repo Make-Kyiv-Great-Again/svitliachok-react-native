@@ -1,17 +1,26 @@
 import { LatLng } from 'react-native-maps';
 import { BuildingPolygon } from '../types/api';
 
+export interface RouteResult {
+  coordinates: LatLng[];
+  distance: number; // in meters
+  duration: number; // in seconds
+}
+
 export const calculateRoute = async (
   origin: LatLng,
   destination: LatLng,
-  mode: 'Car' | 'Pedestrian',
+  mode: 'Driving' | 'Walking' | 'Cycling',
   preference: 'Fastest' | 'Illuminated',
   buildingPolygons: BuildingPolygon[]
-): Promise<LatLng[]> => {
+): Promise<RouteResult> => {
   try {
-    const baseUrl = mode === 'Car' 
-      ? 'https://router.project-osrm.org/route/v1/driving'
-      : 'https://routing.openstreetmap.de/routed-foot/route/v1/driving';
+    let baseUrl = 'https://router.project-osrm.org/route/v1/driving';
+    if (mode === 'Walking') {
+      baseUrl = 'https://routing.openstreetmap.de/routed-foot/route/v1/driving';
+    } else if (mode === 'Cycling') {
+      baseUrl = 'https://routing.openstreetmap.de/routed-bike/route/v1/driving';
+    }
     
     let coordinatesStr = `${origin.longitude},${origin.latitude};`;
     
@@ -24,7 +33,6 @@ export const calculateRoute = async (
         
         buildingPolygons.forEach(zone => {
           if (zone.status === 'OFF' || zone.status === 'EMERGENCY') {
-            // compute rough distance to first coordinate as a centroid approximation
             if (zone.coordinates.length > 0) {
               const pt = zone.coordinates[0];
               const dist = Math.sqrt(Math.pow(midLat - pt.latitude, 2) + Math.pow(midLon - pt.longitude, 2));
@@ -36,7 +44,7 @@ export const calculateRoute = async (
           }
         });
         
-        // If a dark zone is near the midpoint, detour around it
+        // Detour
         if (closestZoneDistance < 0.02 && closestZone && closestZone.coordinates.length > 0) {
              const pt = closestZone.coordinates[0];
              coordinatesStr += `${pt.longitude + 0.01},${pt.latitude + 0.01};`;
@@ -51,16 +59,25 @@ export const calculateRoute = async (
     const data = await response.json();
     
     if (data.routes && data.routes.length > 0) {
-      const coords = data.routes[0].geometry.coordinates;
-      return coords.map((c: number[]) => ({
-        latitude: c[1],
-        longitude: c[0]
-      }));
+      const route = data.routes[0];
+      const coords = route.geometry.coordinates;
+      return {
+        coordinates: coords.map((c: number[]) => ({
+          latitude: c[1],
+          longitude: c[0]
+        })),
+        distance: route.distance || 0,
+        duration: route.duration || 0,
+      };
     }
   } catch (error) {
     console.error("Error fetching route from OSRM:", error);
   }
 
-  // Fallback to straight line if API fails
-  return [origin, destination];
+  // Fallback
+  return {
+    coordinates: [origin, destination],
+    distance: 0,
+    duration: 0
+  };
 };
