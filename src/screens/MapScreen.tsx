@@ -270,8 +270,7 @@ export const MapScreen = () => {
           let strokeColor = 'rgba(100, 116, 139, 0.8)';
           
           if (building.status === 'ON') {
-             fillColor = 'rgba(245, 158, 11, 0.7)'; // Orange
-             strokeColor = 'rgba(245, 158, 11, 1)';
+             return null; // Don't draw orange houses
           } else if (building.status === 'OFF' || building.status === 'EMERGENCY') {
              fillColor = 'rgba(30, 41, 59, 0.8)'; // Dark slate
              strokeColor = 'rgba(15, 23, 42, 1)';
@@ -289,15 +288,26 @@ export const MapScreen = () => {
         })}
 
         {appMode === 'ROUTING' && selectedOrigin && (
-          <Marker coordinate={selectedOrigin} title="Origin" pinColor="green" />
+          <Marker 
+            key={`origin-${selectedOrigin.latitude}-${selectedOrigin.longitude}`}
+            coordinate={selectedOrigin} 
+            title="Origin" 
+            pinColor="green" 
+          />
         )}
 
         {appMode === 'ROUTING' && selectedDestination && (
-          <Marker coordinate={selectedDestination} title="Destination" pinColor="blue" />
+          <Marker 
+            key={`dest-${selectedDestination.latitude}-${selectedDestination.longitude}`}
+            coordinate={selectedDestination} 
+            title="Destination" 
+            pinColor="blue" 
+          />
         )}
 
         {appMode === 'ROUTING' && currentRoute.coordinates.length > 0 && (
           <Polyline
+            key={`route-${currentRoute.distance}-${currentRoute.coordinates.length}`}
             coordinates={currentRoute.coordinates}
             strokeColor={
               currentRoute.status === 'DANGER' ? '#ef4444' : 
