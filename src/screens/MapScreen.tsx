@@ -252,7 +252,7 @@ export const MapScreen = () => {
           </View>
         )}
         
-        {appMode === 'ROUTING' && !isSearchOpen && (
+        {appMode === 'ROUTING' && !isSearchOpen && (!selectedOrigin || !selectedDestination) && (
           <View style={styles.instructionContainer}>
             {!selectedOrigin && !selectedDestination && (
               <Text style={styles.instructionText}>Tap on the map to set starting point</Text>
