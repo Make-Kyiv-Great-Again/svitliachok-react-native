@@ -8,6 +8,7 @@ import { useAppStore } from '../store/useAppStore';
 import { ControlPanel } from '../components/ControlPanel';
 import { calculateRoute } from '../utils/routing';
 import { fetchStatusByCoordinates } from '../api/client';
+import { useNavigation } from '@react-navigation/native';
 import { StatusResponse } from '../types/api';
 
 const KYIV_CENTER = {
@@ -21,6 +22,7 @@ type AppMode = 'INSPECT' | 'ROUTING';
 
 export const MapScreen = () => {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<any>();
   const { buildingPolygons, syncOutagesForRegion, transportMode, routePreference } = useAppStore();
   const [appMode, setAppMode] = useState<AppMode>('INSPECT');
   
@@ -240,6 +242,16 @@ export const MapScreen = () => {
 
   return (
     <View style={styles.container}>
+      {/* Floating Settings Button */}
+      {!isSearchOpen && (
+        <TouchableOpacity 
+          style={[styles.settingsBtn, { top: Math.max(insets.top, 10) }]}
+          onPress={() => navigation.navigate('Settings')}
+        >
+          <Ionicons name="settings-outline" size={24} color="#1e293b" />
+        </TouchableOpacity>
+      )}
+
       {/* Top Floating Bar */}
       <View style={[styles.topBarContainer, { paddingTop: Math.max(insets.top, 10) }]}>
         {isSearchOpen ? (
@@ -419,6 +431,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+  },
+  settingsBtn: {
+    position: 'absolute',
+    right: 16,
+    zIndex: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   map: {
     ...StyleSheet.absoluteFillObject,
