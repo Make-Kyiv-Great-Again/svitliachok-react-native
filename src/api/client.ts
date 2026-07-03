@@ -104,15 +104,14 @@ export const fetchBuildingsInRegion = async (
              }
            });
            status = bestStatus;
-         }
-      }
-      
-      // MOCK DATA: Force some streets to be OFF for testing purposes
-      // This ensures there are always dark zones on the map to test the "Avoid Blackouts" feature.
-      if (street) {
-        const streetHash = street.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-        if (streetHash % 4 === 0) {
-           status = 'OFF';
+      // MOCK DATA: Force statuses for testing purposes so the map is always populated.
+      // If we don't have real data, fallback to a deterministic mock.
+      if (status === 'UNKNOWN') {
+        // Fallback mock based on building ID so it's consistent
+        if (b.id % 4 === 0) {
+          status = 'OFF';
+        } else {
+          status = 'ON';
         }
       }
       
