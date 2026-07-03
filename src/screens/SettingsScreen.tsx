@@ -29,12 +29,12 @@ export const SettingsScreen = () => {
 
   return (
     <View style={[styles.container, { paddingTop: Math.max(insets.top, 10), backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.textPrimary }]}>{t('settings.title')}</Text>
-        <View style={{ width: 24 }} /> {/* Empty view for centering */}
+        <View style={{ width: 24 }} />
       </View>
       
       <View style={styles.content}>
@@ -114,9 +114,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-    backgroundColor: '#ffffff',
   },
   backButton: {
     padding: 4,
