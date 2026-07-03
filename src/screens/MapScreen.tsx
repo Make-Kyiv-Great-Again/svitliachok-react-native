@@ -42,7 +42,8 @@ export const MapScreen = () => {
     coordinates: {latitude: number, longitude: number}[];
     distance: number;
     duration: number;
-  }>({ coordinates: [], distance: 0, duration: 0 });
+    status: 'SAFE' | 'UNKNOWN' | 'DANGER';
+  }>({ coordinates: [], distance: 0, duration: 0, status: 'UNKNOWN' });
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
   
   // Search UI State
@@ -113,7 +114,7 @@ export const MapScreen = () => {
       if (!selectedOrigin || (selectedOrigin && selectedDestination)) {
         setSelectedOrigin(coord);
         setSelectedDestination(null);
-        setCurrentRoute({ coordinates: [], distance: 0, duration: 0 });
+        setCurrentRoute({ coordinates: [], distance: 0, duration: 0, status: 'UNKNOWN' });
       } else {
         setSelectedDestination(coord);
       }
@@ -196,7 +197,7 @@ export const MapScreen = () => {
       if (!selectedOrigin || (selectedOrigin && selectedDestination)) {
         setSelectedOrigin(coord);
         setSelectedDestination(null);
-        setCurrentRoute({ coordinates: [], distance: 0, duration: 0 });
+        setCurrentRoute({ coordinates: [], distance: 0, duration: 0, status: 'UNKNOWN' });
       } else {
         setSelectedDestination(coord);
       }
@@ -265,15 +266,15 @@ export const MapScreen = () => {
 
         {/* Render Actual Building Polygons from API */}
         {buildingPolygons.map((building) => {
-          let fillColor = 'rgba(148, 163, 184, 0.5)'; // Gray (Unknown)
+          let fillColor = 'rgba(148, 163, 184, 0.5)'; // Light Grey (Unknown)
           let strokeColor = 'rgba(100, 116, 139, 0.8)';
           
           if (building.status === 'ON') {
-             fillColor = 'rgba(34, 197, 94, 0.7)'; // Green
-             strokeColor = 'rgba(34, 197, 94, 1)';
+             fillColor = 'rgba(245, 158, 11, 0.7)'; // Orange
+             strokeColor = 'rgba(245, 158, 11, 1)';
           } else if (building.status === 'OFF' || building.status === 'EMERGENCY') {
-             fillColor = 'rgba(239, 68, 68, 0.7)'; // Red
-             strokeColor = 'rgba(239, 68, 68, 1)';
+             fillColor = 'rgba(30, 41, 59, 0.8)'; // Dark slate
+             strokeColor = 'rgba(15, 23, 42, 1)';
           }
 
           return (
@@ -298,7 +299,11 @@ export const MapScreen = () => {
         {appMode === 'ROUTING' && currentRoute.coordinates.length > 0 && (
           <Polyline
             coordinates={currentRoute.coordinates}
-            strokeColor="#3b82f6"
+            strokeColor={
+              currentRoute.status === 'DANGER' ? '#ef4444' : 
+              currentRoute.status === 'UNKNOWN' ? '#94a3b8' : 
+              '#10b981'
+            }
             strokeWidth={4}
           />
         )}
@@ -429,7 +434,7 @@ export const MapScreen = () => {
           onClear={() => {
             setSelectedOrigin(null);
             setSelectedDestination(null);
-            setCurrentRoute({ coordinates: [], distance: 0, duration: 0 });
+            setCurrentRoute({ coordinates: [], distance: 0, duration: 0, status: 'UNKNOWN' });
           }}
           onRebuild={() => {
              // to trigger rebuild we just trick the effect by toggling state or it will rebuild when deps change

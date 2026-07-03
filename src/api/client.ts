@@ -107,6 +107,8 @@ export const fetchBuildingsInRegion = async (
           }
       }
 
+      // MOCK DATA block removed to use real server data
+      
       const coordinates = b.geometry.map((pt: any) => ({ latitude: pt.lat, longitude: pt.lon }));
       
       return {
