@@ -310,7 +310,7 @@ export const MapScreen = () => {
           style={[styles.settingsBtn, { top: Math.max(insets.top, 10), backgroundColor: colors.surface, shadowColor: colors.shadow }]}
           onPress={() => navigation.navigate('Settings')}
         >
-          <Ionicons name="settings-outline" size={20} color={colors.textPrimary} />
+          <Ionicons name="settings" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
       )}
 
@@ -319,7 +319,7 @@ export const MapScreen = () => {
         {isSearchOpen ? (
           <View style={styles.searchBarContainer}>
             <View style={[styles.searchInputRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Ionicons name="search-outline" size={20} color={colors.iconInactive} style={styles.searchIconLeft} />
+              <Ionicons name="search" size={20} color={colors.iconInactive} style={styles.searchIconLeft} />
               <TextInput
                 style={[styles.searchInputSingle, { color: colors.textPrimary }]}
                 placeholder={t('map.searchPlaceholder')}
@@ -385,7 +385,7 @@ export const MapScreen = () => {
               style={[styles.searchIconBtn, { backgroundColor: colors.surface }]} 
               onPress={() => setIsSearchOpen(true)}
             >
-              <Ionicons name="search-outline" size={20} color={colors.textPrimary} />
+              <Ionicons name="search" size={20} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
         )}
