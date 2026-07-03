@@ -155,7 +155,7 @@ export const MapScreen = () => {
       <View style={styles.inspectBottomBlock}>
         {isInspecting ? (
           <View style={styles.inspectLoadingRow}>
-            <ActivityIndicator size="small" color="#ea580c" />
+            <ActivityIndicator size="small" color="#FF9E20" />
             <Text style={styles.inspectLoadingText}>Checking status...</Text>
           </View>
         ) : inspectError ? (
@@ -164,7 +164,7 @@ export const MapScreen = () => {
           <View>
             <Text style={styles.inspectTitle}>{inspectedStatus.address || 'Address Unknown'}</Text>
             <View style={styles.inspectStatusRow}>
-              <View style={[styles.statusDot, { backgroundColor: inspectedStatus.power_status === 'ON' ? '#ea580c' : '#475569' }]} />
+              <View style={[styles.statusDot, { backgroundColor: inspectedStatus.power_status === 'ON' ? '#FF9E20' : '#475569' }]} />
               <Text style={styles.inspectStatusText}>
                 Status: {inspectedStatus.power_status === 'ON' ? 'Active' : 
                  inspectedStatus.power_status === 'OFF' ? 'No Power' : 
@@ -272,7 +272,7 @@ export const MapScreen = () => {
             center={selectedOrigin}
             radius={1000} // 1km radius
             fillColor="transparent"
-            strokeColor="rgba(234, 88, 12, 0.6)" // Orange
+            strokeColor="rgba(255, 158, 32, 0.6)" // Orange
             strokeWidth={1.5}
             lineDashPattern={[5, 5]}
           />
@@ -284,8 +284,8 @@ export const MapScreen = () => {
           let strokeColor = 'rgba(100, 116, 139, 0.8)';
           
           if (building.status === 'ON') {
-             fillColor = 'rgba(234, 88, 12, 0.7)'; // Orange
-             strokeColor = 'rgba(234, 88, 12, 1)';
+             fillColor = 'rgba(255, 158, 32, 0.7)'; // Orange
+             strokeColor = 'rgba(255, 158, 32, 1)';
           } else if (building.status === 'OFF' || building.status === 'EMERGENCY') {
              fillColor = 'rgba(30, 41, 59, 0.8)'; // Dark slate
              strokeColor = 'rgba(15, 23, 42, 1)';
@@ -328,7 +328,7 @@ export const MapScreen = () => {
       
       {isFetchingBuildings && (
         <View style={styles.fetchingOverlay}>
-          <ActivityIndicator size="small" color="#ea580c" />
+          <ActivityIndicator size="small" color="#FF9E20" />
           <Text style={styles.fetchingText}>Scanning houses...</Text>
         </View>
       )}
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   modeButtonActive: {
-    backgroundColor: '#ea580c',
+    backgroundColor: '#FF9E20',
   },
   modeButtonText: {
     color: '#64748b',
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   searchSubmitBtn: {
-    backgroundColor: '#ea580c',
+    backgroundColor: '#FF9E20',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 12,
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 12,
     fontWeight: '600',
-    color: '#ea580c',
+    color: '#FF9E20',
   },
   errorContainer: {
     position: 'absolute',
@@ -545,9 +545,9 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(234, 88, 12, 0.3)',
+    backgroundColor: 'rgba(255, 158, 32, 0.3)',
     borderWidth: 3,
-    borderColor: '#ea580c',
+    borderColor: '#FF9E20',
   },
   inspectBottomBlock: {
     position: 'absolute',
