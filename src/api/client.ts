@@ -107,17 +107,6 @@ export const fetchBuildingsInRegion = async (
           }
       }
 
-      // MOCK DATA: Force statuses for testing purposes so the map is always populated.
-      // If we don't have real data, fallback to a deterministic mock.
-      if (status === 'UNKNOWN') {
-        // Fallback mock based on building ID so it's consistent
-        if (b.id % 4 === 0) {
-          status = 'OFF';
-        } else {
-          status = 'ON';
-        }
-      }
-      
       const coordinates = b.geometry.map((pt: any) => ({ latitude: pt.lat, longitude: pt.lon }));
       
       return {

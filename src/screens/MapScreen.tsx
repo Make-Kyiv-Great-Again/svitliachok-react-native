@@ -265,15 +265,15 @@ export const MapScreen = () => {
 
         {/* Render Actual Building Polygons from API */}
         {buildingPolygons.map((building) => {
-          let fillColor = 'rgba(148, 163, 184, 0.5)'; // Light Grey (Unknown)
+          let fillColor = 'rgba(148, 163, 184, 0.5)'; // Gray (Unknown)
           let strokeColor = 'rgba(100, 116, 139, 0.8)';
           
           if (building.status === 'ON') {
-             fillColor = 'rgba(245, 158, 11, 0.7)'; // Orange
-             strokeColor = 'rgba(245, 158, 11, 1)';
+             fillColor = 'rgba(34, 197, 94, 0.7)'; // Green
+             strokeColor = 'rgba(34, 197, 94, 1)';
           } else if (building.status === 'OFF' || building.status === 'EMERGENCY') {
-             fillColor = 'rgba(30, 41, 59, 0.8)'; // Dark slate
-             strokeColor = 'rgba(15, 23, 42, 1)';
+             fillColor = 'rgba(239, 68, 68, 0.7)'; // Red
+             strokeColor = 'rgba(239, 68, 68, 1)';
           }
 
           return (
