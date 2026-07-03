@@ -222,7 +222,6 @@ export const MapScreen = () => {
         {isInspecting ? (
           <View style={styles.inspectLoadingRow}>
             <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={[styles.inspectLoadingText, { color: colors.textSecondary }]}>...</Text>
           </View>
         ) : inspectError ? (
           <Text style={styles.inspectErrorText}>{inspectError}</Text>
@@ -320,7 +319,7 @@ export const MapScreen = () => {
         {isSearchOpen ? (
           <View style={styles.searchBarContainer}>
             <View style={[styles.searchInputRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Ionicons name="search" size={20} color={colors.iconInactive} style={styles.searchIconLeft} />
+              <Ionicons name="search-outline" size={20} color={colors.iconInactive} style={styles.searchIconLeft} />
               <TextInput
                 style={[styles.searchInputSingle, { color: colors.textPrimary }]}
                 placeholder={t('map.searchPlaceholder')}
@@ -361,7 +360,7 @@ export const MapScreen = () => {
               <TouchableOpacity 
                 style={[
                   styles.modeButton, 
-                  appMode === 'INSPECT' && [styles.modeButtonActive, { backgroundColor: colors.background }]
+                  appMode === 'INSPECT' && [styles.modeButtonActive, { backgroundColor: colors.selected }]
                 ]}
                 onPress={() => setAppMode('INSPECT')}
               >
@@ -372,7 +371,7 @@ export const MapScreen = () => {
               <TouchableOpacity 
                 style={[
                   styles.modeButton, 
-                  appMode === 'ROUTING' && [styles.modeButtonActive, { backgroundColor: colors.background }]
+                  appMode === 'ROUTING' && [styles.modeButtonActive, { backgroundColor: colors.selected }]
                 ]}
                 onPress={() => setAppMode('ROUTING')}
               >
@@ -386,18 +385,18 @@ export const MapScreen = () => {
               style={[styles.searchIconBtn, { backgroundColor: colors.surface }]} 
               onPress={() => setIsSearchOpen(true)}
             >
-              <Ionicons name="search" size={20} color={colors.textPrimary} />
+              <Ionicons name="search-outline" size={20} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
         )}
         
         {appMode === 'ROUTING' && !isSearchOpen && (!selectedOrigin || !selectedDestination) && (
-          <View style={[styles.instructionContainer, { backgroundColor: colors.primary, shadowColor: colors.shadow }]}>
+          <View style={[styles.instructionContainer, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
             {!selectedOrigin && !selectedDestination && (
-              <Text style={styles.instructionText}>{t('map.pathStart')}</Text>
+              <Text style={[styles.instructionText, { color: colors.textSecondary }]}>{t('map.pathStart')}</Text>
             )}
             {selectedOrigin && !selectedDestination && (
-              <Text style={styles.instructionText}>{t('map.pathDest')}</Text>
+              <Text style={[styles.instructionText, { color: colors.textSecondary }]}>{t('map.pathDest')}</Text>
             )}
           </View>
         )}
@@ -405,14 +404,14 @@ export const MapScreen = () => {
       
       {isLoadingRoute && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#3b82f6" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Calculating route...</Text>
         </View>
       )}
       
       {isFetchingBuildings && (
         <View style={styles.fetchingOverlay}>
-          <ActivityIndicator size="small" color="#F59E0B" />
+          <ActivityIndicator size="small" color={colors.primary} />
           <Text style={styles.fetchingText}>Scanning houses...</Text>
         </View>
       )}
@@ -456,9 +455,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     zIndex: 10,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -476,16 +475,19 @@ const styles = StyleSheet.create({
   topBarWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 30,
+    borderRadius: 24,
     padding: 4,
+    height: 48,
   },
   topBar: {
     flexDirection: 'row',
+    marginHorizontal: 2,
   },
   modeButton: {
-    paddingVertical: 10,
+    height: 40,
     paddingHorizontal: 20,
-    borderRadius: 24,
+    borderRadius: 20,
+    justifyContent: 'center',
   },
   modeButtonActive: {
     backgroundColor: '#1f2937',
@@ -498,9 +500,9 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   searchIconBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 4,
@@ -592,7 +594,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontWeight: '600',
-    color: '#F59E0B',
+    // color: '#F59E0B',
   },
   fetchingOverlay: {
     position: 'absolute',
