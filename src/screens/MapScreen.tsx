@@ -11,6 +11,7 @@ import { fetchStatusByCoordinates } from '../api/client';
 import { useNavigation } from '@react-navigation/native';
 import { StatusResponse } from '../types/api';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../theme/useTheme';
 
 const KYIV_CENTER = {
   latitude: 50.4501,
@@ -26,6 +27,7 @@ export const MapScreen = () => {
   const navigation = useNavigation<any>();
   const { buildingPolygons, syncOutagesForRegion, transportMode, routePreference } = useAppStore();
   const { t, i18n } = useTranslation();
+  const { colors, isDarkMode } = useTheme();
   const [appMode, setAppMode] = useState<AppMode>('INSPECT');
   
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
@@ -203,7 +205,7 @@ export const MapScreen = () => {
     if (appMode !== 'INSPECT' || !inspectedLocation) return null;
 
     return (
-      <View style={[styles.inspectBottomBlock, { bottom: Math.max(insets.bottom, 20) }]}>
+      <View style={[styles.inspectBottomBlock, { bottom: Math.max(insets.bottom, 20), backgroundColor: colors.surfaceOpaque, shadowColor: colors.shadow }]}>
         <TouchableOpacity 
           style={styles.inspectCloseBtn} 
           onPress={() => {
@@ -212,22 +214,22 @@ export const MapScreen = () => {
           }}
           hitSlop={{top: 10, right: 10, bottom: 10, left: 10}}
         >
-          <Ionicons name="close" size={24} color="#94a3b8" />
+          <Ionicons name="close" size={24} color={colors.iconInactive} />
         </TouchableOpacity>
         
         {isInspecting ? (
           <View style={styles.inspectLoadingRow}>
-            <ActivityIndicator size="small" color="#F59E0B" />
-            <Text style={styles.inspectLoadingText}>...</Text>
+            <ActivityIndicator size="small" color={colors.primary} />
+            <Text style={[styles.inspectLoadingText, { color: colors.textSecondary }]}>...</Text>
           </View>
         ) : inspectError ? (
           <Text style={styles.inspectErrorText}>{inspectError}</Text>
         ) : inspectedStatus ? (
           <View>
-            <Text style={styles.inspectTitle}>{inspectedStatus.address || 'Address Unknown'}</Text>
+            <Text style={[styles.inspectTitle, { color: colors.textPrimary }]}>{inspectedStatus.address || 'Address Unknown'}</Text>
             <View style={styles.inspectStatusRow}>
-              <View style={[styles.statusDot, { backgroundColor: inspectedStatus.power_status === 'ON' ? '#F59E0B' : '#475569' }]} />
-              <Text style={styles.inspectStatusText}>
+              <View style={[styles.statusDot, { backgroundColor: inspectedStatus.power_status === 'ON' ? colors.primary : colors.textSecondary }]} />
+              <Text style={[styles.inspectStatusText, { color: colors.textPrimary }]}>
                 {inspectedStatus.power_status === 'ON' ? t('map.status.on') : 
                  inspectedStatus.power_status === 'OFF' ? t('map.status.off') : 
                  inspectedStatus.power_status === 'EMERGENCY' ? t('map.status.emergency') :
@@ -235,7 +237,7 @@ export const MapScreen = () => {
               </Text>
             </View>
             {inspectedStatus.status_reason && (
-              <Text style={styles.inspectSubtext}>{inspectedStatus.status_reason}</Text>
+              <Text style={[styles.inspectSubtext, { color: colors.textSecondary }]}>{inspectedStatus.status_reason}</Text>
             )}
           </View>
         ) : null}
@@ -244,46 +246,50 @@ export const MapScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Floating Settings Button */}
       {!isSearchOpen && (
         <TouchableOpacity 
-          style={[styles.settingsBtn, { top: Math.max(insets.top, 10) }]}
+          style={[styles.settingsBtn, { top: Math.max(insets.top, 10), backgroundColor: colors.surfaceOpaque, shadowColor: colors.shadow }]}
           onPress={() => navigation.navigate('Settings')}
         >
-          <Ionicons name="settings-outline" size={20} color="#1e293b" />
+          <Ionicons name="settings-outline" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
       )}
 
       {/* Top Floating Bar */}
       <View style={[styles.topBarContainer, { paddingTop: Math.max(insets.top, 10) }]}>
         {isSearchOpen ? (
-          <View style={styles.searchBarContainer}>
-            <View style={styles.searchInputRow}>
-              <Ionicons name="search" size={20} color="#94a3b8" style={styles.searchIconLeft} />
+          <View style={[styles.searchBarContainer, { backgroundColor: colors.surfaceOpaque, shadowColor: colors.shadow }]}>
+            <View style={[styles.searchInputRow, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <Ionicons name="search" size={20} color={colors.iconInactive} style={styles.searchIconLeft} />
               <TextInput
-                style={styles.searchInputSingle}
+                style={[styles.searchInputSingle, { color: colors.textPrimary }]}
                 placeholder={t('map.searchPlaceholder')}
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={colors.textSecondary}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 autoFocus
               />
               <TouchableOpacity onPress={() => { setIsSearchOpen(false); setSearchQuery(''); setSearchResults([]); }}>
-                <Ionicons name="close" size={20} color="#94a3b8" />
+                <Ionicons name="close" size={20} color={colors.iconInactive} />
               </TouchableOpacity>
             </View>
             
             {isSearching && (
-               <ActivityIndicator size="small" color="#F59E0B" style={{marginVertical: 10}} />
+               <ActivityIndicator size="small" color={colors.primary} style={{marginVertical: 10}} />
             )}
             
             {!isSearching && searchResults.length > 0 && (
               <View style={styles.searchResultsContainer}>
                 {searchResults.map((item, index) => (
-                  <TouchableOpacity key={item.place_id || index} style={styles.searchResultItem} onPress={() => handleSelectSearchResult(item)}>
-                    <Ionicons name="location-outline" size={20} color="#F59E0B" style={styles.searchResultIcon} />
-                    <Text style={styles.searchResultText} numberOfLines={2}>
+                  <TouchableOpacity 
+                    key={item.place_id || index} 
+                    style={[styles.searchResultItem, { borderBottomColor: colors.border }]} 
+                    onPress={() => handleSelectSearchResult(item)}
+                  >
+                    <Ionicons name="location-outline" size={20} color={colors.primary} style={styles.searchResultIcon} />
+                    <Text style={[styles.searchResultText, { color: colors.textPrimary }]} numberOfLines={2}>
                       {item.display_name}
                     </Text>
                   </TouchableOpacity>
@@ -292,33 +298,43 @@ export const MapScreen = () => {
             )}
           </View>
         ) : (
-          <View style={styles.topBarWrapper}>
-            <View style={styles.topBar}>
+          <View style={[styles.topBarWrapper, { backgroundColor: colors.surfaceOpaque, shadowColor: colors.shadow }]}>
+            <View style={[styles.topBar, { backgroundColor: colors.background, borderColor: colors.border }]}>
               <TouchableOpacity 
-                style={[styles.modeButton, appMode === 'INSPECT' && styles.modeButtonActive]}
+                style={[
+                  styles.modeButton, 
+                  appMode === 'INSPECT' && [styles.modeButtonActive, { backgroundColor: colors.surface }]
+                ]}
                 onPress={() => setAppMode('INSPECT')}
               >
-                <Text style={[styles.modeButtonText, appMode === 'INSPECT' && styles.modeButtonTextActive]}>{t('map.modeInspect')}</Text>
+                <Text style={[styles.modeButtonText, { color: colors.textSecondary }, appMode === 'INSPECT' && [styles.modeButtonTextActive, { color: colors.textPrimary }]]}>
+                  {t('map.modeInspect')}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.modeButton, appMode === 'ROUTING' && styles.modeButtonActive]}
+                style={[
+                  styles.modeButton, 
+                  appMode === 'ROUTING' && [styles.modeButtonActive, { backgroundColor: colors.surface }]
+                ]}
                 onPress={() => setAppMode('ROUTING')}
               >
-                <Text style={[styles.modeButtonText, appMode === 'ROUTING' && styles.modeButtonTextActive]}>{t('map.modePaths')}</Text>
+                <Text style={[styles.modeButtonText, { color: colors.textSecondary }, appMode === 'ROUTING' && [styles.modeButtonTextActive, { color: colors.textPrimary }]]}>
+                  {t('map.modePaths')}
+                </Text>
               </TouchableOpacity>
             </View>
             
             <TouchableOpacity 
-              style={styles.searchIconBtn} 
+              style={[styles.searchIconBtn, { backgroundColor: colors.background, borderColor: colors.border }]} 
               onPress={() => setIsSearchOpen(true)}
             >
-              <Ionicons name="search" size={20} color="#1e293b" />
+              <Ionicons name="search" size={20} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
         )}
         
         {appMode === 'ROUTING' && !isSearchOpen && (!selectedOrigin || !selectedDestination) && (
-          <View style={styles.instructionContainer}>
+          <View style={[styles.instructionContainer, { backgroundColor: colors.primary, shadowColor: colors.shadow }]}>
             {!selectedOrigin && !selectedDestination && (
               <Text style={styles.instructionText}>{t('map.pathStart')}</Text>
             )}
@@ -335,7 +351,7 @@ export const MapScreen = () => {
         showsUserLocation={true}
         onPress={handleMapPress}
         onRegionChangeComplete={handleRegionChange}
-        userInterfaceStyle="light"
+        userInterfaceStyle={colors.mapStyle}
       >
         {appMode === 'INSPECT' && inspectedLocation && (
           <Marker coordinate={inspectedLocation}>

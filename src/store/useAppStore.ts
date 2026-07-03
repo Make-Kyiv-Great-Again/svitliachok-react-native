@@ -7,6 +7,7 @@ import { fetchBuildingsInRegion } from '../api/client';
 
 export type TransportMode = 'Driving' | 'Walking';
 export type RoutePreference = 'Fastest' | 'Illuminated';
+export type ThemePreference = 'system' | 'light' | 'dark';
 
 interface AppState {
   buildingPolygons: BuildingPolygon[];
@@ -15,11 +16,13 @@ interface AppState {
   isSyncing: boolean;
   transportMode: TransportMode;
   routePreference: RoutePreference;
+  themePreference: ThemePreference;
 
   
   setOnlineStatus: (status: boolean) => void;
   setTransportMode: (mode: TransportMode) => void;
   setRoutePreference: (pref: RoutePreference) => void;
+  setThemePreference: (theme: ThemePreference) => void;
   syncOutagesForRegion: (south: number, west: number, north: number, east: number) => Promise<void>;
 }
 
@@ -32,10 +35,12 @@ export const useAppStore = create<AppState>()(
       isSyncing: false,
       transportMode: 'Driving',
       routePreference: 'Fastest',
+      themePreference: 'system',
 
       setOnlineStatus: (status: boolean) => set({ isOnline: status }),
       setTransportMode: (mode: TransportMode) => set({ transportMode: mode }),
       setRoutePreference: (pref: RoutePreference) => set({ routePreference: pref }),
+      setThemePreference: (theme: ThemePreference) => set({ themePreference: theme }),
 
       syncOutagesForRegion: async (south, west, north, east) => {
         const networkState = await Network.getNetworkStateAsync();
@@ -77,6 +82,7 @@ export const useAppStore = create<AppState>()(
         lastSyncTime: state.lastSyncTime,
         transportMode: state.transportMode,
         routePreference: state.routePreference,
+        themePreference: state.themePreference,
       }),
     }
   )

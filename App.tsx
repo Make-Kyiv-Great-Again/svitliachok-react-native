@@ -6,12 +6,16 @@ import { SettingsScreen } from './src/screens/SettingsScreen';
 import { StatusBar } from 'react-native';
 import './src/i18n';
 
+import { useTheme } from './src/theme/useTheme';
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  const { isDarkMode } = useTheme();
+  
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Map" component={MapScreen} />

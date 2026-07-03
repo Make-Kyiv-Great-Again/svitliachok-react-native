@@ -46,6 +46,12 @@
       "en": "English",
       "uk": "Українська",
       "description": "Select the application language."
+    },
+    "theme": {
+      "title": "Theme",
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
     }
   }
 }

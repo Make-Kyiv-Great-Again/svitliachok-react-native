@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppStore, TransportMode, RoutePreference } from '../store/useAppStore';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../theme/useTheme';
 
 interface ControlPanelProps {
   distance?: number;
@@ -21,6 +22,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
     setRoutePreference,
   } = useAppStore();
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   const handleModeChange = (mode: TransportMode) => {
     setTransportMode(mode);
@@ -44,56 +46,64 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
   };
 
   return (
-    <View style={[styles.container, { bottom: Math.max(insets.bottom, 20) }]}>
+    <View style={[styles.container, { bottom: Math.max(insets.bottom, 20), backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t('controlPanel.title')}</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>{t('controlPanel.title')}</Text>
         <TouchableOpacity onPress={onClear} hitSlop={{top: 10, right: 10, bottom: 10, left: 10}}>
-          <Ionicons name="close" size={24} color="#94a3b8" />
+          <Ionicons name="close" size={24} color={colors.iconInactive} />
         </TouchableOpacity>
       </View>
       
       <View style={styles.buttonRow}>
         <TouchableOpacity 
-          style={[styles.modeButton, transportMode === 'Driving' && styles.activeModeButton]}
+          style={[
+            styles.modeButton, 
+            { backgroundColor: colors.surface, borderColor: colors.border },
+            transportMode === 'Driving' && [styles.activeModeButton, { borderColor: colors.primary, backgroundColor: colors.primaryDim }]
+          ]}
           onPress={() => handleModeChange('Driving')}
         >
-          <Ionicons name="car-outline" size={18} color={transportMode === 'Driving' ? '#F59E0B' : '#6b7280'} />
-          <Text style={[styles.modeText, transportMode === 'Driving' && styles.activeModeText]}>{t('controlPanel.mode.driving')}</Text>
+          <Ionicons name="car-outline" size={18} color={transportMode === 'Driving' ? colors.primary : colors.textSecondary} />
+          <Text style={[styles.modeText, { color: colors.textSecondary }, transportMode === 'Driving' && { color: colors.primary }]}>{t('controlPanel.mode.driving')}</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={[styles.modeButton, transportMode === 'Walking' && styles.activeModeButton]}
+          style={[
+            styles.modeButton,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+            transportMode === 'Walking' && [styles.activeModeButton, { borderColor: colors.primary, backgroundColor: colors.primaryDim }]
+          ]}
           onPress={() => handleModeChange('Walking')}
         >
-          <Ionicons name="walk-outline" size={18} color={transportMode === 'Walking' ? '#F59E0B' : '#6b7280'} />
-          <Text style={[styles.modeText, transportMode === 'Walking' && styles.activeModeText]}>{t('controlPanel.mode.walking')}</Text>
+          <Ionicons name="walk-outline" size={18} color={transportMode === 'Walking' ? colors.primary : colors.textSecondary} />
+          <Text style={[styles.modeText, { color: colors.textSecondary }, transportMode === 'Walking' && { color: colors.primary }]}>{t('controlPanel.mode.walking')}</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.statsBox}>
+      <View style={[styles.statsBox, { backgroundColor: colors.background }]}>
         <View style={styles.statsRow}>
           <View style={styles.statCol}>
-            <Text style={styles.statLabel}>{t('controlPanel.metrics.distance').toUpperCase()}</Text>
-            <Text style={styles.statValue}>{formatDistance(distance)}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('controlPanel.metrics.distance').toUpperCase()}</Text>
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{formatDistance(distance)}</Text>
           </View>
           <View style={styles.statCol}>
-            <Text style={styles.statLabel}>{t('controlPanel.metrics.duration').toUpperCase()}</Text>
-            <Text style={styles.statValue}>{formatTime(duration)}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('controlPanel.metrics.duration').toUpperCase()}</Text>
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{formatTime(duration)}</Text>
           </View>
         </View>
         
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
         
         <View style={styles.infoRow}>
-          <Ionicons name="flash" size={14} color="#F59E0B" />
-          <Text style={styles.infoText}>
+          <Ionicons name="flash" size={14} color={colors.primary} />
+          <Text style={[styles.infoText, { color: colors.primary }]}>
             {routePreference === 'Illuminated' ? 'Kyiv Outage Slices Enabled' : 'Standard Routing (Outages Ignored)'}
           </Text>
         </View>
       </View>
 
-      <TouchableOpacity style={styles.rebuildButton} onPress={togglePreference}>
-        <Ionicons name="refresh-outline" size={20} color="white" style={{ marginRight: 8 }} />
+      <TouchableOpacity style={[styles.rebuildButton, { backgroundColor: colors.primary }]} onPress={togglePreference}>
+        <Ionicons name="refresh-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
         <Text style={styles.rebuildButtonText}>
           {routePreference === 'Illuminated' ? 'Switch to Fastest Route' : 'Avoid Blackouts & Rebuild'}
         </Text>
