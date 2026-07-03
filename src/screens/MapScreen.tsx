@@ -13,6 +13,8 @@ import { StatusResponse } from '../types/api';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme/useTheme';
 
+import { darkMapStyle } from '../theme/mapStyles';
+
 const KYIV_CENTER = {
   latitude: 50.4501,
   longitude: 30.5234,
@@ -254,6 +256,7 @@ export const MapScreen = () => {
         onPress={handleMapPress}
         onRegionChangeComplete={handleRegionChange}
         userInterfaceStyle={colors.mapStyle}
+        customMapStyle={isDarkMode ? darkMapStyle : []}
       >
         {appMode === 'INSPECT' && inspectedLocation && (
           <Marker coordinate={inspectedLocation}>
@@ -313,10 +316,10 @@ export const MapScreen = () => {
       )}
 
       {/* Top Floating Bar */}
-      <View style={[styles.topBarContainer, { paddingTop: Math.max(insets.top, 10) }]}>
+      <View style={[styles.topBarContainer, { paddingTop: Math.max(insets.top, 10) }]} pointerEvents="box-none">
         {isSearchOpen ? (
-          <View style={[styles.searchBarContainer, { backgroundColor: colors.surfaceOpaque, shadowColor: colors.shadow }]}>
-            <View style={[styles.searchInputRow, { backgroundColor: colors.background, borderColor: colors.border }]}>
+          <View style={styles.searchBarContainer}>
+            <View style={[styles.searchInputRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <Ionicons name="search" size={20} color={colors.iconInactive} style={styles.searchIconLeft} />
               <TextInput
                 style={[styles.searchInputSingle, { color: colors.textPrimary }]}
@@ -336,7 +339,7 @@ export const MapScreen = () => {
             )}
             
             {!isSearching && searchResults.length > 0 && (
-              <View style={styles.searchResultsContainer}>
+              <View style={[styles.searchResultsContainer, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
                 {searchResults.map((item, index) => (
                   <TouchableOpacity 
                     key={item.place_id || index} 
