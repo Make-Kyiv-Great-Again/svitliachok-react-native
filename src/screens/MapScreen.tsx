@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontWeight: '600',
-    color: '#3b82f6',
+    color: '#F59E0B',
   },
   fetchingOverlay: {
     position: 'absolute',
@@ -666,7 +666,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   inspectLoadingText: {
-    color: '#64748b',
+    color: '#8b7364ff',
     marginLeft: 10,
     fontSize: 15,
     fontWeight: '500',
