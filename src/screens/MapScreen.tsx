@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 24,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
   searchResultsContainer: {
     marginTop: 8,
     backgroundColor: '#ffffff',
-    borderRadius: 16,
+    borderRadius: 24,
     paddingVertical: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
