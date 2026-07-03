@@ -39,9 +39,9 @@ export const MapScreen = () => {
   
   // Search UI State
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchOrigin, setSearchOrigin] = useState('');
-  const [searchDest, setSearchDest] = useState('');
-  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Inspect State
   const [inspectedLocation, setInspectedLocation] = useState<{latitude: number, longitude: number} | null>(null);
@@ -125,26 +125,62 @@ export const MapScreen = () => {
     setIsFetchingBuildings(false);
   };
 
-  const executeSearch = async () => {
-    Keyboard.dismiss();
-    if (!searchOrigin || !searchDest) return;
-
-    setIsGeocoding(true);
-    try {
-      const originResult = await Location.geocodeAsync(searchOrigin);
-      const destResult = await Location.geocodeAsync(searchDest);
-
-      if (originResult.length > 0 && destResult.length > 0) {
-        setSelectedOrigin({ latitude: originResult[0].latitude, longitude: originResult[0].longitude });
-        setSelectedDestination({ latitude: destResult[0].latitude, longitude: destResult[0].longitude });
-        setIsSearchOpen(false);
-      } else {
-        alert("Could not find one of the locations.");
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.length < 3) {
+        setSearchResults([]);
+        return;
       }
-    } catch (e) {
-      alert("Error searching for locations.");
-    } finally {
-      setIsGeocoding(false);
+      setIsSearching(true);
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery + ', Kyiv')}&format=json&limit=5&addressdetails=1`);
+        const data = await response.json();
+        setSearchResults(data);
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const handleSelectSearchResult = async (result: any) => {
+    Keyboard.dismiss();
+    setIsSearchOpen(false);
+    setSearchQuery('');
+    setSearchResults([]);
+    
+    const coord = {
+      latitude: parseFloat(result.lat),
+      longitude: parseFloat(result.lon)
+    };
+
+    if (appMode === 'INSPECT') {
+      setInspectedLocation(coord);
+      setIsInspecting(true);
+      setInspectError(null);
+      setInspectedStatus(null);
+      
+      try {
+        const statusResult = await fetchStatusByCoordinates(coord.latitude, coord.longitude);
+        setInspectedStatus(statusResult);
+      } catch (err: any) {
+        console.error("Inspect error:", err);
+        setInspectError("No data available for this location.");
+      } finally {
+        setIsInspecting(false);
+      }
+    } else {
+      // Routing Mode
+      if (!selectedOrigin || (selectedOrigin && selectedDestination)) {
+        setSelectedOrigin(coord);
+        setSelectedDestination(null);
+        setCurrentRoute({ coordinates: [], distance: 0, duration: 0 });
+      } else {
+        setSelectedDestination(coord);
+      }
     }
   };
 
@@ -197,32 +233,37 @@ export const MapScreen = () => {
       <View style={[styles.topBarContainer, { paddingTop: Math.max(insets.top, 10) }]}>
         {isSearchOpen ? (
           <View style={styles.searchBarContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Origin (e.g. Khreshchatyk 1)"
-              placeholderTextColor="#94a3b8"
-              value={searchOrigin}
-              onChangeText={setSearchOrigin}
-            />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Destination (e.g. Podil)"
-              placeholderTextColor="#94a3b8"
-              value={searchDest}
-              onChangeText={setSearchDest}
-            />
-            <View style={styles.searchButtonsRow}>
-              <TouchableOpacity style={styles.searchCancelBtn} onPress={() => setIsSearchOpen(false)}>
-                <Text style={styles.searchCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.searchSubmitBtn} onPress={executeSearch}>
-                {isGeocoding ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.searchSubmitText}>Search Paths</Text>
-                )}
+            <View style={styles.searchInputRow}>
+              <Ionicons name="search" size={20} color="#94a3b8" style={styles.searchIconLeft} />
+              <TextInput
+                style={styles.searchInputSingle}
+                placeholder="Search location (e.g. Obolon)"
+                placeholderTextColor="#94a3b8"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoFocus
+              />
+              <TouchableOpacity onPress={() => { setIsSearchOpen(false); setSearchQuery(''); setSearchResults([]); }}>
+                <Ionicons name="close" size={20} color="#94a3b8" />
               </TouchableOpacity>
             </View>
+            
+            {isSearching && (
+               <ActivityIndicator size="small" color="#F59E0B" style={{marginVertical: 10}} />
+            )}
+            
+            {!isSearching && searchResults.length > 0 && (
+              <View style={styles.searchResultsContainer}>
+                {searchResults.map((item, index) => (
+                  <TouchableOpacity key={item.place_id || index} style={styles.searchResultItem} onPress={() => handleSelectSearchResult(item)}>
+                    <Ionicons name="location-outline" size={20} color="#F59E0B" style={styles.searchResultIcon} />
+                    <Text style={styles.searchResultText} numberOfLines={2}>
+                      {item.display_name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         ) : (
           <View style={styles.topBarWrapper}>
@@ -241,14 +282,12 @@ export const MapScreen = () => {
               </TouchableOpacity>
             </View>
             
-            {appMode === 'ROUTING' && (
-              <TouchableOpacity 
-                style={styles.searchIconBtn} 
-                onPress={() => setIsSearchOpen(true)}
-              >
-                <Ionicons name="search" size={20} color="#1e293b" />
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity 
+              style={styles.searchIconBtn} 
+              onPress={() => setIsSearchOpen(true)}
+            >
+              <Ionicons name="search" size={20} color="#1e293b" />
+            </TouchableOpacity>
           </View>
         )}
         
@@ -427,50 +466,56 @@ const styles = StyleSheet.create({
   },
   searchBarContainer: {
     width: '90%',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    backgroundColor: 'transparent',
   },
-  searchInput: {
-    backgroundColor: '#f1f5f9',
-    borderRadius: 8,
+  searchInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  searchIconLeft: {
+    marginRight: 8,
+  },
+  searchInputSingle: {
+    flex: 1,
+    fontSize: 16,
     color: '#0f172a',
-    fontSize: 14,
   },
-  searchButtonsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  searchCancelBtn: {
-    marginRight: 16,
+  searchResultsContainer: {
+    marginTop: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+    maxHeight: 250,
   },
-  searchCancelText: {
-    color: '#64748b',
-    fontWeight: '600',
-  },
-  searchSubmitBtn: {
-    backgroundColor: '#F59E0B',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    minWidth: 120,
+  searchResultItem: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
   },
-  searchSubmitText: {
-    color: '#fff',
-    fontWeight: 'bold',
+  searchResultIcon: {
+    marginRight: 12,
+  },
+  searchResultText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#1e293b',
   },
   instructionContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
