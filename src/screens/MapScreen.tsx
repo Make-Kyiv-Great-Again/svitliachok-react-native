@@ -278,16 +278,7 @@ export const MapScreen = () => {
           </Marker>
         )}
 
-        {appMode === 'ROUTING' && selectedOrigin && (
-          <Circle
-            center={selectedOrigin}
-            radius={1000} // 1km radius
-            fillColor="transparent"
-            strokeColor="rgba(245, 158, 11, 0.6)" // Orange
-            strokeWidth={1.5}
-            lineDashPattern={[5, 5]}
-          />
-        )}
+
 
         {/* Render Actual Building Polygons from API */}
         {buildingPolygons.map((building) => {
