@@ -153,6 +153,17 @@ export const MapScreen = () => {
 
     return (
       <View style={[styles.inspectBottomBlock, { bottom: Math.max(insets.bottom + 10, 20) }]}>
+        <TouchableOpacity 
+          style={styles.inspectCloseBtn} 
+          onPress={() => {
+            setInspectedLocation(null);
+            setInspectedStatus(null);
+          }}
+          hitSlop={{top: 10, right: 10, bottom: 10, left: 10}}
+        >
+          <Ionicons name="close" size={24} color="#94a3b8" />
+        </TouchableOpacity>
+        
         {isInspecting ? (
           <View style={styles.inspectLoadingRow}>
             <ActivityIndicator size="small" color="#F59E0B" />
@@ -562,6 +573,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 10,
     elevation: 8,
+  },
+  inspectCloseBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    padding: 4,
   },
   inspectLoadingRow: {
     flexDirection: 'row',

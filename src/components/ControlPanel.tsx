@@ -45,6 +45,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
     <View style={[styles.container, { bottom: Math.max(insets.bottom + 10, 20) }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Route Status Summary</Text>
+        <TouchableOpacity onPress={onClear} hitSlop={{top: 10, right: 10, bottom: 10, left: 10}}>
+          <Ionicons name="close" size={24} color="#94a3b8" />
+        </TouchableOpacity>
       </View>
       
       <View style={styles.buttonRow}>
@@ -115,6 +118,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 16,
   },
   title: {
