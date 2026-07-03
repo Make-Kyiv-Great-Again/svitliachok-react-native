@@ -1,12 +1,12 @@
 import { LatLng } from 'react-native-maps';
-import { StatusResponse } from '../types/api';
+import { BuildingPolygon } from '../types/api';
 
 export const calculateRoute = async (
   origin: LatLng,
   destination: LatLng,
   mode: 'Car' | 'Pedestrian',
   preference: 'Fastest' | 'Illuminated',
-  outageZones: StatusResponse[]
+  buildingPolygons: BuildingPolygon[]
 ): Promise<LatLng[]> => {
   try {
     const baseUrl = mode === 'Car' 
@@ -17,24 +17,29 @@ export const calculateRoute = async (
     
     if (preference === 'Illuminated') {
         let closestZoneDistance = Infinity;
-        let closestZone: StatusResponse | null = null;
+        let closestZone: BuildingPolygon | null = null;
         
         const midLat = (origin.latitude + destination.latitude) / 2;
         const midLon = (origin.longitude + destination.longitude) / 2;
         
-        outageZones.forEach(zone => {
-          if (zone.lat && zone.lon && zone.power_status === 'OFF') {
-            const dist = Math.sqrt(Math.pow(midLat - zone.lat, 2) + Math.pow(midLon - zone.lon, 2));
-            if (dist < closestZoneDistance) {
-              closestZoneDistance = dist;
-              closestZone = zone;
+        buildingPolygons.forEach(zone => {
+          if (zone.status === 'OFF' || zone.status === 'EMERGENCY') {
+            // compute rough distance to first coordinate as a centroid approximation
+            if (zone.coordinates.length > 0) {
+              const pt = zone.coordinates[0];
+              const dist = Math.sqrt(Math.pow(midLat - pt.latitude, 2) + Math.pow(midLon - pt.longitude, 2));
+              if (dist < closestZoneDistance) {
+                closestZoneDistance = dist;
+                closestZone = zone;
+              }
             }
           }
         });
         
         // If a dark zone is near the midpoint, detour around it
-        if (closestZoneDistance < 0.02 && closestZone) {
-             coordinatesStr += `${(closestZone.lon || 0) + 0.01},${(closestZone.lat || 0) + 0.01};`;
+        if (closestZoneDistance < 0.02 && closestZone && closestZone.coordinates.length > 0) {
+             const pt = closestZone.coordinates[0];
+             coordinatesStr += `${pt.longitude + 0.01},${pt.latitude + 0.01};`;
         }
     }
     

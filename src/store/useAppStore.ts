@@ -2,14 +2,14 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Network from 'expo-network';
-import { StatusResponse } from '../types/api';
-import { fetchAllOutageZones } from '../api/client';
+import { BuildingPolygon } from '../types/api';
+import { fetchBuildingsInRegion } from '../api/client';
 
 export type TransportMode = 'Car' | 'Pedestrian';
 export type RoutePreference = 'Fastest' | 'Illuminated';
 
 interface AppState {
-  outageZones: StatusResponse[];
+  buildingPolygons: BuildingPolygon[];
   lastSyncTime: number | null;
   isOnline: boolean;
   isSyncing: boolean;
@@ -19,13 +19,13 @@ interface AppState {
   setOnlineStatus: (status: boolean) => void;
   setTransportMode: (mode: TransportMode) => void;
   setRoutePreference: (pref: RoutePreference) => void;
-  syncOutages: () => Promise<void>;
+  syncOutagesForRegion: (south: number, west: number, north: number, east: number) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      outageZones: [],
+      buildingPolygons: [],
       lastSyncTime: null,
       isOnline: true,
       isSyncing: false,
@@ -36,27 +36,34 @@ export const useAppStore = create<AppState>()(
       setTransportMode: (mode: TransportMode) => set({ transportMode: mode }),
       setRoutePreference: (pref: RoutePreference) => set({ routePreference: pref }),
 
-      syncOutages: async () => {
+      syncOutagesForRegion: async (south, west, north, east) => {
         const networkState = await Network.getNetworkStateAsync();
         const online = !!networkState.isConnected && !!networkState.isInternetReachable;
         set({ isOnline: online });
 
         if (!online) {
-          console.log('Device is offline. Using cached outage zones.');
+          console.log('Device is offline. Using cached building polygons.');
           return;
         }
 
         try {
           set({ isSyncing: true });
-          const zones = await fetchAllOutageZones();
+          const polygons = await fetchBuildingsInRegion(south, west, north, east);
+          
+          // Merge with existing polygons to act as a cache
+          const existing = get().buildingPolygons;
+          const mergedMap = new Map();
+          existing.forEach(p => mergedMap.set(p.id, p));
+          polygons.forEach(p => mergedMap.set(p.id, p));
+          
           set({
-            outageZones: zones,
+            buildingPolygons: Array.from(mergedMap.values()),
             lastSyncTime: Date.now(),
             isSyncing: false,
           });
-          console.log('Successfully synced outage zones.');
+          console.log(`Successfully synced ${polygons.length} buildings for region.`);
         } catch (error) {
-          console.error('Failed to sync outage zones:', error);
+          console.error('Failed to sync buildings:', error);
           set({ isSyncing: false });
         }
       },
@@ -65,11 +72,11 @@ export const useAppStore = create<AppState>()(
       name: 'svitliachok-storage',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
-        outageZones: state.outageZones,
+        buildingPolygons: state.buildingPolygons,
         lastSyncTime: state.lastSyncTime,
         transportMode: state.transportMode,
         routePreference: state.routePreference,
-      }), // only persist these fields
+      }),
     }
   )
 );

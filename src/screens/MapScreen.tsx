@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, ActivityIndicator } from 'react-native';
-import MapView, { Marker, Polyline, Circle, MapPressEvent } from 'react-native-maps';
+import MapView, { Marker, Polyline, Polygon, MapPressEvent, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useAppStore } from '../store/useAppStore';
 import { ControlPanel } from '../components/ControlPanel';
@@ -14,7 +14,7 @@ const KYIV_CENTER = {
 };
 
 export const MapScreen = () => {
-  const { outageZones, syncOutages, transportMode, routePreference } = useAppStore();
+  const { buildingPolygons, syncOutagesForRegion, transportMode, routePreference } = useAppStore();
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
@@ -22,6 +22,7 @@ export const MapScreen = () => {
   const [selectedDestination, setSelectedDestination] = useState<{latitude: number, longitude: number} | null>(null);
   const [currentRoute, setCurrentRoute] = useState<{latitude: number, longitude: number}[]>([]);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  const [isFetchingBuildings, setIsFetchingBuildings] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -34,10 +35,7 @@ export const MapScreen = () => {
       let loc = await Location.getCurrentPositionAsync({});
       setLocation(loc);
     })();
-    
-    // Initial sync
-    syncOutages();
-  }, [syncOutages]);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -47,23 +45,36 @@ export const MapScreen = () => {
       }
       
       setIsLoadingRoute(true);
-      const route = await calculateRoute(selectedOrigin, selectedDestination, transportMode, routePreference, outageZones);
+      const route = await calculateRoute(selectedOrigin, selectedDestination, transportMode, routePreference, buildingPolygons);
       setCurrentRoute(route);
       setIsLoadingRoute(false);
     })();
-  }, [selectedOrigin, selectedDestination, transportMode, routePreference, outageZones]);
+  }, [selectedOrigin, selectedDestination, transportMode, routePreference, buildingPolygons]);
 
   const handleMapPress = (e: MapPressEvent) => {
     const coord = e.nativeEvent.coordinate;
     if (!selectedOrigin || (selectedOrigin && selectedDestination)) {
-      // Start over: set new origin, clear destination and route
       setSelectedOrigin(coord);
       setSelectedDestination(null);
       setCurrentRoute([]);
     } else {
-      // Second tap: set destination
       setSelectedDestination(coord);
     }
+  };
+
+  const handleRegionChange = async (region: Region) => {
+    // Only query Overpass if we are zoomed in enough (latitudeDelta < 0.05)
+    if (region.latitudeDelta > 0.05) return;
+    
+    // Calculate bounding box for the region
+    const south = region.latitude - region.latitudeDelta / 2;
+    const north = region.latitude + region.latitudeDelta / 2;
+    const west = region.longitude - region.longitudeDelta / 2;
+    const east = region.longitude + region.longitudeDelta / 2;
+    
+    setIsFetchingBuildings(true);
+    await syncOutagesForRegion(south, west, north, east);
+    setIsFetchingBuildings(false);
   };
 
   return (
@@ -73,34 +84,40 @@ export const MapScreen = () => {
         initialRegion={KYIV_CENTER}
         showsUserLocation={true}
         onPress={handleMapPress}
+        onRegionChangeComplete={handleRegionChange}
       >
-        {/* Render Outage Zones */}
-        {outageZones.map((zone, index) => {
-          if (zone.lat && zone.lon && zone.power_status === 'OFF') {
-            return (
-              <Circle
-                key={`zone-${index}`}
-                center={{ latitude: zone.lat, longitude: zone.lon }}
-                radius={500} 
-                fillColor="rgba(0, 0, 0, 0.4)"
-                strokeColor="rgba(0, 0, 0, 0.8)"
-              />
-            );
+        {/* Render Actual Building Polygons from API */}
+        {buildingPolygons.map((building) => {
+          let fillColor = 'rgba(75, 85, 99, 0.5)'; // Grey (Unknown)
+          let strokeColor = 'rgba(75, 85, 99, 0.8)';
+          
+          if (building.status === 'ON') {
+             fillColor = 'rgba(234, 88, 12, 0.8)'; // Orange
+             strokeColor = 'rgba(251, 146, 60, 1)';
+          } else if (building.status === 'OFF' || building.status === 'EMERGENCY') {
+             fillColor = 'rgba(17, 24, 39, 0.95)'; // Black
+             strokeColor = 'rgba(55, 65, 81, 1)';
           }
-          return null;
+
+          return (
+            <Polygon
+              key={`building-${building.id}`}
+              coordinates={building.coordinates}
+              fillColor={fillColor}
+              strokeColor={strokeColor}
+              strokeWidth={1}
+            />
+          );
         })}
 
-        {/* Render Selected Origin */}
         {selectedOrigin && (
           <Marker coordinate={selectedOrigin} title="Origin" pinColor="green" />
         )}
 
-        {/* Render Selected Destination */}
         {selectedDestination && (
           <Marker coordinate={selectedDestination} title="Destination" pinColor="blue" />
         )}
 
-        {/* Render Calculated Route */}
         {currentRoute.length > 0 && (
           <Polyline
             coordinates={currentRoute}
@@ -110,11 +127,17 @@ export const MapScreen = () => {
         )}
       </MapView>
       
-      {/* Loading Overlay */}
       {isLoadingRoute && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color="#3b82f6" />
           <Text style={styles.loadingText}>Calculating route...</Text>
+        </View>
+      )}
+      
+      {isFetchingBuildings && (
+        <View style={styles.fetchingOverlay}>
+          <ActivityIndicator size="small" color="#ea580c" />
+          <Text style={styles.fetchingText}>Scanning houses...</Text>
         </View>
       )}
 
@@ -124,7 +147,6 @@ export const MapScreen = () => {
         </View>
       )}
 
-      {/* Helper Instruction text if no points selected */}
       {!selectedOrigin && !selectedDestination && (
         <View style={styles.instructionContainer}>
           <Text style={styles.instructionText}>Tap on the map to set starting point</Text>
@@ -167,6 +189,27 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontWeight: '600',
     color: '#3b82f6',
+  },
+  fetchingOverlay: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 10,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  fetchingText: {
+    marginLeft: 8,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#ea580c',
   },
   instructionContainer: {
     position: 'absolute',

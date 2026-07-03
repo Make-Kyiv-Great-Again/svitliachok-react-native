@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { StatusResponse } from '../types/api';
+import { StatusResponse, BuildingPolygon } from '../types/api';
 
 const API_BASE_URL = 'https://svitlo-finder.xyz/api/v1';
 
@@ -15,44 +15,108 @@ export const fetchStatusByCoordinates = async (lat: number, lon: number): Promis
   return response.data;
 };
 
-// We will mock fetching all outage zones by coordinates since the API is address-based.
-// In a real scenario, the backend should return a list of polygons or coordinates of all dark zones in Kyiv.
-export const fetchAllOutageZones = async (): Promise<StatusResponse[]> => {
-  // Demo mock: Return some mock dark zones in Kyiv if the API doesn't have a bulk endpoint
-  return [
-    {
-      region_id: 25,
-      street_id: 1,
-      house_id: 1,
-      dso_id: 902,
-      address: 'Mock Dark Zone 1',
-      group_info: { group: 1, subgroup: 1, raw_group_key: '', mapped_group_key: '' },
-      power_status: 'OFF',
-      status_reason: 'Planned',
-      planned_schedule: null,
-      weekly_schedule: null,
-      has_power: false,
-      group: '1',
-      last_update: null,
-      lat: 50.4501,
-      lon: 30.5234, // Kyiv center
-    },
-    {
-      region_id: 25,
-      street_id: 2,
-      house_id: 2,
-      dso_id: 902,
-      address: 'Mock Dark Zone 2',
-      group_info: { group: 2, subgroup: 2, raw_group_key: '', mapped_group_key: '' },
-      power_status: 'OFF',
-      status_reason: 'Emergency',
-      planned_schedule: null,
-      weekly_schedule: null,
-      has_power: false,
-      group: '2',
-      last_update: null,
-      lat: 50.4400,
-      lon: 30.5100, // Near KPI or similar
+export const fetchBuildingsInRegion = async (
+  south: number, west: number, north: number, east: number
+): Promise<BuildingPolygon[]> => {
+  try {
+    const query = `[out:json];way(${south},${west},${north},${east})["addr:housenumber"]["addr:street"];out geom;`;
+    // We can use one of the instances
+    const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+    
+    const response = await fetch(overpassUrl);
+    if (!response.ok) throw new Error("Overpass API failed");
+    const data = await response.json();
+    const elements = data.elements || [];
+    
+    if (elements.length === 0) return [];
+    
+    const buildingsByStreet: Record<string, any[]> = {};
+    elements.forEach((b: any) => {
+      const street = b.tags['addr:street'];
+      if (!buildingsByStreet[street]) buildingsByStreet[street] = [];
+      buildingsByStreet[street].push(b);
+    });
+    
+    const uniqueToQuery: {streetName: string, houseName: string}[] = [];
+    const queriedKeys = new Set<string>();
+    
+    for (const street in buildingsByStreet) {
+      const streetBuildings = buildingsByStreet[street];
+      let count = 0;
+      for (const b of streetBuildings) {
+        const house = b.tags['addr:housenumber'];
+        const key = `${street}||${house}`;
+        if (!queriedKeys.has(key)) {
+          queriedKeys.add(key);
+          uniqueToQuery.push({ streetName: street, houseName: house });
+          count++;
+          if (count >= 3) break;
+        }
+      }
     }
-  ];
+    
+    // Fetch batch statuses
+    const batchRes = await apiClient.post('/status/batch', uniqueToQuery);
+    const batchResults = batchRes.data;
+    
+    const resolvedStatuses: Record<string, string> = {};
+    const streetStatuses: Record<string, {houseNum: number, status: string}[]> = {};
+    
+    batchResults.forEach((item: any) => {
+      // API might return 'power_status' or 'status'
+      const status = item.power_status || item.status || 'UNKNOWN';
+      const key = `${item.streetName}||${item.houseName}`;
+      resolvedStatuses[key] = status;
+      
+      if (!streetStatuses[item.streetName]) streetStatuses[item.streetName] = [];
+      const match = item.houseName ? item.houseName.match(/\\d+/) : null;
+      const num = match ? parseInt(match[0]) : 1;
+      
+      streetStatuses[item.streetName].push({
+        houseNum: num,
+        status: status
+      });
+    });
+    
+    return elements.map((b: any) => {
+      const street = b.tags['addr:street'];
+      const house = b.tags['addr:housenumber'];
+      const key = `${street}||${house}`;
+      
+      let status = 'UNKNOWN';
+      if (resolvedStatuses[key] && resolvedStatuses[key] !== 'UNKNOWN') {
+        status = resolvedStatuses[key];
+      } else if (streetStatuses[street]) {
+         const valid = streetStatuses[street].filter(s => s.status !== 'UNKNOWN');
+         const list = valid.length > 0 ? valid : streetStatuses[street];
+         if (list.length > 0) {
+           const match = house ? house.match(/\\d+/) : null;
+           const targetNum = match ? parseInt(match[0]) : 1;
+           let minDiff = Infinity;
+           let bestStatus = 'UNKNOWN';
+           list.forEach(item => {
+             const diff = Math.abs(item.houseNum - targetNum);
+             if (diff < minDiff) {
+               minDiff = diff;
+               bestStatus = item.status;
+             }
+           });
+           status = bestStatus;
+         }
+      }
+      
+      const coordinates = b.geometry.map((pt: any) => ({ latitude: pt.lat, longitude: pt.lon }));
+      
+      return {
+        id: b.id,
+        coordinates,
+        street,
+        house,
+        status: status as 'ON' | 'OFF' | 'EMERGENCY' | 'UNKNOWN'
+      };
+    });
+  } catch (error) {
+    console.error("Failed to fetch viewport data:", error);
+    return [];
+  }
 };

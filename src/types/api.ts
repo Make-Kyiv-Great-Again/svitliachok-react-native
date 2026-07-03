@@ -38,7 +38,14 @@ export interface StatusResponse {
   group: string;
   last_update: string | null;
   
-  // Custom frontend fields for map rendering
   lat?: number;
   lon?: number;
+}
+
+export interface BuildingPolygon {
+  id: number;
+  coordinates: { latitude: number, longitude: number }[];
+  street: string;
+  house: string;
+  status: 'ON' | 'OFF' | 'EMERGENCY' | 'UNKNOWN';
 }
