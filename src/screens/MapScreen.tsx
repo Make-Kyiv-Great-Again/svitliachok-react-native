@@ -201,7 +201,7 @@ export const MapScreen = () => {
     if (appMode !== 'INSPECT' || !inspectedLocation) return null;
 
     return (
-      <View style={[styles.inspectBottomBlock, { bottom: Math.max(insets.bottom + 10, 20) }]}>
+      <View style={[styles.inspectBottomBlock, { bottom: Math.max(insets.bottom, 20) }]}>
         <TouchableOpacity 
           style={styles.inspectCloseBtn} 
           onPress={() => {
@@ -248,7 +248,7 @@ export const MapScreen = () => {
           style={[styles.settingsBtn, { top: Math.max(insets.top, 10) }]}
           onPress={() => navigation.navigate('Settings')}
         >
-          <Ionicons name="settings-outline" size={24} color="#1e293b" />
+          <Ionicons name="settings-outline" size={20} color="#1e293b" />
         </TouchableOpacity>
       )}
 
@@ -437,9 +437,9 @@ const styles = StyleSheet.create({
     right: 16,
     zIndex: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
