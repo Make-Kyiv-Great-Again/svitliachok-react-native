@@ -45,6 +45,13 @@ export const MapScreen = () => {
     duration: number;
     status: 'SAFE' | 'UNKNOWN' | 'DANGER';
   }>({ coordinates: [], segments: [], distance: 0, duration: 0, status: 'UNKNOWN' });
+  const [alternativeRoute, setAlternativeRoute] = useState<{
+    coordinates: {latitude: number, longitude: number}[];
+    segments: {coordinates: {latitude: number, longitude: number}[], status: 'SAFE'|'UNKNOWN'|'DANGER'}[];
+    distance: number;
+    duration: number;
+    status: 'SAFE' | 'UNKNOWN' | 'DANGER';
+  } | null>(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
   
   // Search UI State
@@ -81,11 +88,22 @@ export const MapScreen = () => {
       }
       
       setIsLoadingRoute(true);
-      const routeResult = await calculateRoute(selectedOrigin, selectedDestination, transportMode, routePreference, buildingPolygons);
-      setCurrentRoute(routeResult);
+      setAlternativeRoute(null);
+      
+      const defaultRoute = await calculateRoute(selectedOrigin, selectedDestination, transportMode, 'Fastest', buildingPolygons);
+      setCurrentRoute(defaultRoute);
+
+      if (defaultRoute.status === 'UNKNOWN' || defaultRoute.status === 'DANGER') {
+        const altRoute = await calculateRoute(selectedOrigin, selectedDestination, transportMode, 'Illuminated', buildingPolygons);
+        
+        if (Math.abs(altRoute.distance - defaultRoute.distance) > 10 || altRoute.status !== defaultRoute.status) {
+          setAlternativeRoute(altRoute);
+        }
+      }
+
       setIsLoadingRoute(false);
     })();
-  }, [selectedOrigin, selectedDestination, transportMode, routePreference, buildingPolygons, appMode]);
+  }, [selectedOrigin, selectedDestination, transportMode, buildingPolygons, appMode]);
 
   const handleMapPress = async (e: MapPressEvent) => {
     if (isSearchOpen) {
@@ -265,28 +283,7 @@ export const MapScreen = () => {
           </Marker>
         )}
 
-        {/* Render Actual Building Polygons from API */}
-        {buildingPolygons.map((building) => {
-          let fillColor = 'rgba(148, 163, 184, 0.5)'; // Light Grey (Unknown)
-          let strokeColor = 'rgba(100, 116, 139, 0.8)';
-          
-          if (building.status === 'ON') {
-             return null; // Don't draw orange houses
-          } else if (building.status === 'OFF' || building.status === 'EMERGENCY') {
-             fillColor = 'rgba(30, 41, 59, 0.8)'; // Dark slate
-             strokeColor = 'rgba(15, 23, 42, 1)';
-          }
-
-          return (
-            <Polygon
-              key={`building-${building.id}`}
-              coordinates={building.coordinates}
-              fillColor={fillColor}
-              strokeColor={strokeColor}
-              strokeWidth={1}
-            />
-          );
-        })}
+        {/* Building Polygons removed as per user request to not draw any houses */}
 
         {appMode === 'ROUTING' && selectedOrigin && (
           <Marker 
@@ -442,10 +439,19 @@ export const MapScreen = () => {
         <ControlPanel
           distance={currentRoute.distance}
           duration={currentRoute.duration}
+          routeStatus={currentRoute.status}
+          hasAlternative={alternativeRoute !== null}
+          onSwapRoute={() => {
+            if (alternativeRoute) {
+               setCurrentRoute(alternativeRoute);
+               setAlternativeRoute(currentRoute);
+            }
+          }}
           onClear={() => {
             setSelectedOrigin(null);
             setSelectedDestination(null);
             setCurrentRoute({ coordinates: [], segments: [], distance: 0, duration: 0, status: 'UNKNOWN' });
+            setAlternativeRoute(null);
           }}
           onRebuild={() => {
              // to trigger rebuild we just trick the effect by toggling state or it will rebuild when deps change

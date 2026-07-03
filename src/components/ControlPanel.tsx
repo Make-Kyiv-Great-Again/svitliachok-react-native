@@ -9,17 +9,18 @@ import { useTheme } from '../theme/useTheme';
 interface ControlPanelProps {
   distance?: number;
   duration?: number;
+  routeStatus?: 'SAFE' | 'UNKNOWN' | 'DANGER';
+  hasAlternative?: boolean;
+  onSwapRoute?: () => void;
   onClear: () => void;
   onRebuild: () => void;
 }
 
-export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, onClear, onRebuild }) => {
+export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, routeStatus, hasAlternative, onSwapRoute, onClear, onRebuild }) => {
   const insets = useSafeAreaInsets();
   const { 
     transportMode, 
-    setTransportMode, 
-    routePreference, 
-    setRoutePreference,
+    setTransportMode,
   } = useAppStore();
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -29,12 +30,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
     onRebuild();
   };
   
-  const togglePreference = () => {
-    const newPref = routePreference === 'Illuminated' ? 'Fastest' : 'Illuminated';
-    setRoutePreference(newPref);
-    onRebuild();
-  };
-
   const formatDistance = (meters?: number) => {
     if (!meters) return '-- ' + t('controlPanel.metrics.kilometers');
     return (meters / 1000).toFixed(1) + ' ' + t('controlPanel.metrics.kilometers');
@@ -53,6 +48,27 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
           <Ionicons name="close" size={24} color={colors.iconInactive} />
         </TouchableOpacity>
       </View>
+
+      {/* Route Status Banner */}
+      {routeStatus === 'SAFE' ? (
+        <View style={[styles.bannerContainer, { backgroundColor: '#10b98120', borderColor: '#10b981' }]}>
+          <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+          <Text style={[styles.bannerText, { color: '#10b981' }]}>The path is fully illuminated and safe</Text>
+        </View>
+      ) : hasAlternative ? (
+        <TouchableOpacity 
+          style={[styles.bannerContainer, { backgroundColor: '#f59e0b20', borderColor: '#f59e0b' }]}
+          onPress={onSwapRoute}
+        >
+          <Ionicons name="flash" size={20} color="#f59e0b" />
+          <Text style={[styles.bannerText, { color: '#f59e0b' }]}>Found a lighter path. Tap to view.</Text>
+        </TouchableOpacity>
+      ) : routeStatus ? (
+        <View style={[styles.bannerContainer, { backgroundColor: colors.surfaceOpaque, borderColor: colors.border }]}>
+          <Ionicons name="warning" size={20} color={colors.textSecondary} />
+          <Text style={[styles.bannerText, { color: colors.textSecondary }]}>Path has gray zones. No alternative found.</Text>
+        </View>
+      ) : null}
       
       <View style={styles.buttonRow}>
         <TouchableOpacity 
@@ -91,23 +107,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{formatTime(duration)}</Text>
           </View>
         </View>
-        
-        <View style={[styles.divider, { backgroundColor: colors.border }]} />
-        
-        <View style={styles.infoRow}>
-          <Ionicons name="flash" size={14} color={colors.primary} />
-          <Text style={[styles.infoText, { color: colors.primary }]}>
-            {routePreference === 'Illuminated' ? 'Kyiv Outage Slices Enabled' : 'Standard Routing (Outages Ignored)'}
-          </Text>
-        </View>
       </View>
-
-      <TouchableOpacity style={[styles.rebuildButton, { backgroundColor: colors.primary }]} onPress={togglePreference}>
-        <Ionicons name="refresh-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-        <Text style={styles.rebuildButtonText}>
-          {routePreference === 'Illuminated' ? 'Switch to Fastest Route' : 'Avoid Blackouts & Rebuild'}
-        </Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -194,34 +194,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0f172a',
   },
-  divider: {
-    height: 1,
-    backgroundColor: '#e2e8f0',
-    width: '100%',
-    marginBottom: 12,
-  },
-  infoRow: {
+  bannerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+    gap: 8,
   },
-  infoText: {
-    color: '#F59E0B',
-    fontSize: 13,
+  bannerText: {
+    fontSize: 14,
     fontWeight: '600',
-  },
-  rebuildButton: {
-    backgroundColor: '#F59E0B',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 16,
-  },
-  rebuildButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
   }
 });
