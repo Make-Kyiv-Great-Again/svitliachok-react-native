@@ -50,7 +50,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
           style={[styles.modeButton, transportMode === 'Driving' && styles.activeModeButton]}
           onPress={() => handleModeChange('Driving')}
         >
-          <Ionicons name="car-outline" size={18} color={transportMode === 'Driving' ? '#FF9E20' : '#6b7280'} />
+          <Ionicons name="car-outline" size={18} color={transportMode === 'Driving' ? '#F59E0B' : '#6b7280'} />
           <Text style={[styles.modeText, transportMode === 'Driving' && styles.activeModeText]}>Driving</Text>
         </TouchableOpacity>
         
@@ -58,7 +58,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
           style={[styles.modeButton, transportMode === 'Walking' && styles.activeModeButton]}
           onPress={() => handleModeChange('Walking')}
         >
-          <Ionicons name="walk-outline" size={18} color={transportMode === 'Walking' ? '#FF9E20' : '#6b7280'} />
+          <Ionicons name="walk-outline" size={18} color={transportMode === 'Walking' ? '#F59E0B' : '#6b7280'} />
           <Text style={[styles.modeText, transportMode === 'Walking' && styles.activeModeText]}>Walking</Text>
         </TouchableOpacity>
       </View>
@@ -78,7 +78,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
         <View style={styles.divider} />
         
         <View style={styles.infoRow}>
-          <Ionicons name="flash" size={14} color="#FF9E20" />
+          <Ionicons name="flash" size={14} color="#F59E0B" />
           <Text style={styles.infoText}>
             {routePreference === 'Illuminated' ? 'Kyiv Outage Slices Enabled' : 'Standard Routing (Outages Ignored)'}
           </Text>
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   activeModeButton: {
-    borderColor: '#FF9E20',
+    borderColor: '#F59E0B',
     backgroundColor: '#fff7ed',
   },
   modeText: {
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   activeModeText: {
-    color: '#FF9E20',
+    color: '#F59E0B',
   },
   statsBox: {
     backgroundColor: '#f8fafc',
@@ -189,12 +189,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   infoText: {
-    color: '#FF9E20',
+    color: '#F59E0B',
     fontSize: 13,
     fontWeight: '600',
   },
   rebuildButton: {
-    backgroundColor: '#FF9E20',
+    backgroundColor: '#F59E0B',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
