@@ -1,8 +1,14 @@
 import { LatLng } from 'react-native-maps';
 import { BuildingPolygon } from '../types/api';
 
+export interface RouteSegment {
+  coordinates: LatLng[];
+  status: 'SAFE' | 'UNKNOWN' | 'DANGER';
+}
+
 export interface RouteResult {
   coordinates: LatLng[];
+  segments: RouteSegment[];
   distance: number; // in meters
   duration: number; // in seconds
   status: 'SAFE' | 'UNKNOWN' | 'DANGER';
@@ -36,9 +42,9 @@ export const calculateRoute = async (
           if (zone.status === 'OFF' || zone.status === 'EMERGENCY') {
             if (zone.coordinates.length > 0) {
               const pt = zone.coordinates[0];
-              const dist = Math.sqrt(Math.pow(midLat - pt.latitude, 2) + Math.pow(midLon - pt.longitude, 2));
-              if (dist < closestZoneDistance) {
-                closestZoneDistance = dist;
+              const distSq = Math.pow(midLat - pt.latitude, 2) + Math.pow(midLon - pt.longitude, 2);
+              if (distSq < closestZoneDistance) {
+                closestZoneDistance = distSq;
                 closestZone = zone;
               }
             }
@@ -46,7 +52,7 @@ export const calculateRoute = async (
         }
         
         // Detour
-        if (closestZoneDistance < 0.02 && closestZone && closestZone.coordinates.length > 0) {
+        if (closestZoneDistance < 0.0004 && closestZone && closestZone.coordinates.length > 0) {
              const pt = closestZone.coordinates[0];
              coordinatesStr += `${pt.longitude + 0.01},${pt.latitude + 0.01};`;
         }
@@ -67,36 +73,58 @@ export const calculateRoute = async (
         longitude: c[0]
       }));
 
-      // Calculate path status based on nearby buildings
-      let pathStatus: 'SAFE' | 'UNKNOWN' | 'DANGER' = 'UNKNOWN';
-      let hasKnownData = false;
+      // Calculate path segments based on nearby buildings
+      const segments: RouteSegment[] = [];
+      let currentSegmentCoords: LatLng[] = [];
+      let currentSegmentStatus: 'SAFE' | 'UNKNOWN' | 'DANGER' | null = null;
+      const DISTANCE_THRESHOLD_SQ = 0.000004; // 0.002^2
 
-      for (const zone of buildingPolygons) {
-        if (zone.coordinates.length > 0) {
-          const pt = zone.coordinates[0];
-          // Check if building is close to any point on the route
-          const isNearRoute = formattedCoords.some((rc: LatLng) => {
-             const dist = Math.sqrt(Math.pow(rc.latitude - pt.latitude, 2) + Math.pow(rc.longitude - pt.longitude, 2));
-             return dist < 0.002; // approx 200m
-          });
-
-          if (isNearRoute) {
-            if (zone.status === 'OFF' || zone.status === 'EMERGENCY') {
-              pathStatus = 'DANGER';
-              break; // Immediately red if any outage found
-            } else if (zone.status === 'ON') {
-              hasKnownData = true;
+      for (const coord of formattedCoords) {
+        let coordStatus: 'SAFE' | 'UNKNOWN' | 'DANGER' = 'UNKNOWN';
+        let foundSafe = false;
+        let foundDanger = false;
+        
+        for (const zone of buildingPolygons) {
+          if (zone.coordinates.length > 0) {
+            const pt = zone.coordinates[0];
+            const distSq = Math.pow(coord.latitude - pt.latitude, 2) + Math.pow(coord.longitude - pt.longitude, 2);
+            if (distSq < DISTANCE_THRESHOLD_SQ) {
+              if (zone.status === 'OFF' || zone.status === 'EMERGENCY') {
+                foundDanger = true;
+                break;
+              } else if (zone.status === 'ON') {
+                foundSafe = true;
+              }
             }
           }
         }
+        
+        if (foundDanger) coordStatus = 'DANGER';
+        else if (foundSafe) coordStatus = 'SAFE';
+
+        if (currentSegmentStatus === null) {
+          currentSegmentStatus = coordStatus;
+          currentSegmentCoords.push(coord);
+        } else if (currentSegmentStatus === coordStatus) {
+          currentSegmentCoords.push(coord);
+        } else {
+          segments.push({ coordinates: currentSegmentCoords, status: currentSegmentStatus });
+          currentSegmentCoords = [currentSegmentCoords[currentSegmentCoords.length - 1], coord];
+          currentSegmentStatus = coordStatus;
+        }
       }
 
-      if (pathStatus !== 'DANGER') {
-        pathStatus = hasKnownData ? 'SAFE' : 'UNKNOWN';
+      if (currentSegmentCoords.length > 0 && currentSegmentStatus !== null) {
+        segments.push({ coordinates: currentSegmentCoords, status: currentSegmentStatus });
       }
+
+      let pathStatus: 'SAFE' | 'UNKNOWN' | 'DANGER' = 'UNKNOWN';
+      if (segments.some(s => s.status === 'DANGER')) pathStatus = 'DANGER';
+      else if (segments.some(s => s.status === 'SAFE')) pathStatus = 'SAFE';
 
       return {
         coordinates: formattedCoords,
+        segments,
         distance: route.distance || 0,
         duration: route.duration || 0,
         status: pathStatus
@@ -109,6 +137,7 @@ export const calculateRoute = async (
   // Fallback
   return {
     coordinates: [origin, destination],
+    segments: [{ coordinates: [origin, destination], status: 'UNKNOWN' }],
     distance: 0,
     duration: 0,
     status: 'UNKNOWN'

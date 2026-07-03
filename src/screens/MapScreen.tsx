@@ -40,10 +40,11 @@ export const MapScreen = () => {
   const [selectedDestination, setSelectedDestination] = useState<{latitude: number, longitude: number} | null>(null);
   const [currentRoute, setCurrentRoute] = useState<{
     coordinates: {latitude: number, longitude: number}[];
+    segments: {coordinates: {latitude: number, longitude: number}[], status: 'SAFE'|'UNKNOWN'|'DANGER'}[];
     distance: number;
     duration: number;
     status: 'SAFE' | 'UNKNOWN' | 'DANGER';
-  }>({ coordinates: [], distance: 0, duration: 0, status: 'UNKNOWN' });
+  }>({ coordinates: [], segments: [], distance: 0, duration: 0, status: 'UNKNOWN' });
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
   
   // Search UI State
@@ -114,7 +115,7 @@ export const MapScreen = () => {
       if (!selectedOrigin || (selectedOrigin && selectedDestination)) {
         setSelectedOrigin(coord);
         setSelectedDestination(null);
-        setCurrentRoute({ coordinates: [], distance: 0, duration: 0, status: 'UNKNOWN' });
+        setCurrentRoute({ coordinates: [], segments: [], distance: 0, duration: 0, status: 'UNKNOWN' });
       } else {
         setSelectedDestination(coord);
       }
@@ -197,7 +198,7 @@ export const MapScreen = () => {
       if (!selectedOrigin || (selectedOrigin && selectedDestination)) {
         setSelectedOrigin(coord);
         setSelectedDestination(null);
-        setCurrentRoute({ coordinates: [], distance: 0, duration: 0, status: 'UNKNOWN' });
+        setCurrentRoute({ coordinates: [], segments: [], distance: 0, duration: 0, status: 'UNKNOWN' });
       } else {
         setSelectedDestination(coord);
       }
@@ -305,18 +306,18 @@ export const MapScreen = () => {
           />
         )}
 
-        {appMode === 'ROUTING' && currentRoute.coordinates.length > 0 && (
+        {appMode === 'ROUTING' && currentRoute.segments.map((segment, index) => (
           <Polyline
-            key={`route-${currentRoute.distance}-${currentRoute.coordinates.length}`}
-            coordinates={currentRoute.coordinates}
+            key={`route-segment-${currentRoute.distance}-${index}`}
+            coordinates={segment.coordinates}
             strokeColor={
-              currentRoute.status === 'DANGER' ? '#ef4444' : 
-              currentRoute.status === 'UNKNOWN' ? '#94a3b8' : 
-              '#10b981'
+              segment.status === 'DANGER' ? '#ef4444' : 
+              segment.status === 'UNKNOWN' ? '#94a3b8' : 
+              '#00e676'
             }
-            strokeWidth={4}
+            strokeWidth={5}
           />
-        )}
+        ))}
       </MapView>
 
       {/* Floating Settings Button */}
@@ -444,7 +445,7 @@ export const MapScreen = () => {
           onClear={() => {
             setSelectedOrigin(null);
             setSelectedDestination(null);
-            setCurrentRoute({ coordinates: [], distance: 0, duration: 0, status: 'UNKNOWN' });
+            setCurrentRoute({ coordinates: [], segments: [], distance: 0, duration: 0, status: 'UNKNOWN' });
           }}
           onRebuild={() => {
              // to trigger rebuild we just trick the effect by toggling state or it will rebuild when deps change
