@@ -43,12 +43,11 @@ export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locati
 
         return (
           <Marker
-            key={`${loc.id}-${isSelected ? 'selected' : 'unselected'}`}
+            key={loc.id}
             coordinate={{ latitude: loc.latitude, longitude: loc.longitude }}
             onPress={() => onPress(loc)}
             anchor={{ x: 0.5, y: 1 }}
             zIndex={isSelected ? 10 : 1}
-            tracksViewChanges={false}
           >
             <View style={styles.markerContainer}>
               {isSelected && (
