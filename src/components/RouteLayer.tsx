@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Marker, Polyline } from 'react-native-maps';
 import { RouteResult } from '../types/routing';
+import { useTheme } from '../theme/useTheme';
 
 interface RouteLayerProps {
   selectedOrigin: { latitude: number; longitude: number } | null;
@@ -14,6 +15,8 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
   selectedDestination,
   currentRoute,
 }) => {
+  const { colors } = useTheme();
+
   return (
     <>
       {selectedOrigin && (
@@ -24,7 +27,7 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
           anchor={{ x: 0.5, y: 0.5 }}
           zIndex={2}
         >
-          <View style={[styles.markerRing, { backgroundColor: '#00e676' }]}>
+          <View style={[styles.markerRing, { backgroundColor: '#00e676', borderColor: colors.surface }]}>
             <Text style={styles.markerText}>A</Text>
           </View>
         </Marker>
@@ -38,7 +41,7 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
           anchor={{ x: 0.5, y: 0.5 }}
           zIndex={2}
         >
-          <View style={[styles.markerRing, { backgroundColor: '#ff3b30' }]}>
+          <View style={[styles.markerRing, { backgroundColor: '#ff3b30', borderColor: colors.surface }]}>
             <Text style={styles.markerText}>B</Text>
           </View>
         </Marker>
@@ -71,7 +74,6 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 2.5,
-    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',

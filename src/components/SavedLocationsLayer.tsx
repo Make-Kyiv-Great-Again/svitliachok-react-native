@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import { SavedLocation } from '../types/api';
+import { useTheme } from '../theme/useTheme';
 
 const ICON_MAP: Record<string, string> = {
   home:       'home',
@@ -30,6 +31,8 @@ interface SavedLocationsLayerProps {
 }
 
 export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locations, onPress }) => {
+  const { colors } = useTheme();
+
   return (
     <>
       {locations.map((loc) => {
@@ -43,7 +46,7 @@ export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locati
             onPress={() => onPress(loc)}
             anchor={{ x: 0.5, y: 0.5 }}
           >
-            <View style={[styles.pin, { backgroundColor: color }]}>
+            <View style={[styles.pin, { backgroundColor: color, borderColor: colors.surface }]}>
               <Ionicons name={iconName} size={15} color="#fff" />
             </View>
           </Marker>
@@ -59,7 +62,6 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 2.5,
-    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
