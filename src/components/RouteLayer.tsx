@@ -23,6 +23,7 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
           title="Origin"
           anchor={{ x: 0.5, y: 1 }}
           zIndex={2}
+          tracksViewChanges={false}
         >
           <View style={styles.markerContainer}>
             <View style={[styles.markerRing, { backgroundColor: '#00e676' }]}>
@@ -40,6 +41,7 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
           title="Destination"
           anchor={{ x: 0.5, y: 1 }}
           zIndex={2}
+          tracksViewChanges={false}
         >
           <View style={styles.markerContainer}>
             <View style={[styles.markerRing, { backgroundColor: '#ff3b30' }]}>
