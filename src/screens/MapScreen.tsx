@@ -34,7 +34,7 @@ type AppMode = 'INSPECT' | 'ROUTING';
 export const MapScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
-  const { buildingPolygons, syncOutagesForRegion, transportMode, savedLocations, addSavedLocation, updateSavedLocationStatus } = useAppStore();
+  const { buildingPolygons, syncOutagesForRegion, transportMode, savedLocations, addSavedLocation, updateSavedLocationStatus, removeSavedLocation } = useAppStore();
   const { i18n } = useTranslation();
   const { colors, isDarkMode } = useTheme();
 
@@ -162,6 +162,10 @@ export const MapScreen = () => {
   const topPadding = Math.max(insets.top, 10);
   const bottomOffset = Math.max(insets.bottom, 20);
 
+  const inspectedSavedLoc = inspectedLocation 
+    ? savedLocations.find(l => l.latitude === inspectedLocation.latitude && l.longitude === inspectedLocation.longitude) 
+    : null;
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <MapView
@@ -173,7 +177,7 @@ export const MapScreen = () => {
         userInterfaceStyle={colors.mapStyle}
         customMapStyle={isDarkMode ? darkMapStyle : []}
       >
-        {appMode === 'INSPECT' && inspectedLocation && !savedLocations.some(l => l.latitude === inspectedLocation.latitude && l.longitude === inspectedLocation.longitude) && (
+        {appMode === 'INSPECT' && inspectedLocation && !inspectedSavedLoc && (
           <Marker coordinate={inspectedLocation}>
             <View style={styles.inspectMarkerPin} />
           </Marker>
@@ -282,6 +286,14 @@ export const MapScreen = () => {
             setIsSaveSheetOpen(false);
           }}
           onSave={() => setIsSaveSheetOpen(true)}
+          isSaved={!!inspectedSavedLoc}
+          onRemove={() => {
+            if (inspectedSavedLoc) {
+              removeSavedLocation(inspectedSavedLoc.id);
+              setInspectedLocation(null);
+              setInspectedStatus(null);
+            }
+          }}
         />
       )}
 

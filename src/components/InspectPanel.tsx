@@ -12,6 +12,8 @@ interface InspectPanelProps {
   bottomOffset: number;
   onClose: () => void;
   onSave: () => void;
+  isSaved?: boolean;
+  onRemove?: () => void;
 }
 
 export const InspectPanel: React.FC<InspectPanelProps> = ({
@@ -21,6 +23,8 @@ export const InspectPanel: React.FC<InspectPanelProps> = ({
   bottomOffset,
   onClose,
   onSave,
+  isSaved,
+  onRemove,
 }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -69,14 +73,24 @@ export const InspectPanel: React.FC<InspectPanelProps> = ({
             </Text>
           )}
 
-          {/* Save Button */}
-          <TouchableOpacity
-            style={[styles.saveBtn, { backgroundColor: colors.primaryDim, borderColor: colors.primary }]}
-            onPress={onSave}
-          >
-            <Ionicons name="bookmark-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
-            <Text style={[styles.saveBtnText, { color: colors.primary }]}>Save location</Text>
-          </TouchableOpacity>
+          {/* Save / Remove Button */}
+          {isSaved ? (
+            <TouchableOpacity
+              style={[styles.saveBtn, { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: colors.danger }]}
+              onPress={onRemove}
+            >
+              <Ionicons name="trash-outline" size={16} color={colors.danger} style={{ marginRight: 6 }} />
+              <Text style={[styles.saveBtnText, { color: colors.danger }]}>Remove location</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.saveBtn, { backgroundColor: colors.primaryDim, borderColor: colors.primary }]}
+              onPress={onSave}
+            >
+              <Ionicons name="bookmark-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
+              <Text style={[styles.saveBtnText, { color: colors.primary }]}>Save location</Text>
+            </TouchableOpacity>
+          )}
         </View>
       ) : null}
     </View>
