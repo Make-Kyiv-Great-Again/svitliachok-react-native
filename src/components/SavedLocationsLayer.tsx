@@ -3,7 +3,6 @@ import { View, StyleSheet } from 'react-native';
 import { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import { SavedLocation } from '../types/api';
-import { useTheme } from '../theme/useTheme';
 
 const ICON_MAP: Record<string, string> = {
   home:       'home',
@@ -31,9 +30,6 @@ interface SavedLocationsLayerProps {
 }
 
 export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locations, onPress }) => {
-  const { isDarkMode } = useTheme();
-  const iconColor = isDarkMode ? '#000000' : '#ffffff';
-
   return (
     <>
       {locations.map((loc) => {
@@ -45,10 +41,13 @@ export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locati
             coordinate={{ latitude: loc.latitude, longitude: loc.longitude }}
             title={loc.name}
             onPress={() => onPress(loc)}
-            anchor={{ x: 0.5, y: 0.5 }}
+            anchor={{ x: 0.5, y: 1 }}
           >
-            <View style={[styles.pin, { backgroundColor: color }]}>
-              <Ionicons name={iconName} size={15} color={iconColor} />
+            <View style={styles.markerContainer}>
+              <View style={[styles.pin, { backgroundColor: color }]}>
+                <Ionicons name={iconName} size={15} color="#fff" />
+              </View>
+              <View style={styles.triangle} />
             </View>
           </Marker>
         );
@@ -58,18 +57,34 @@ export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locati
 };
 
 const styles = StyleSheet.create({
+  markerContainer: {
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+  },
   pin: {
     width: 32,
     height: 32,
     borderRadius: 16,
     borderWidth: 2.5,
-    borderColor: 'rgba(255, 255, 255, 0.85)',
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
+  },
+  triangle: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: '#ffffff',
+    marginTop: -1.5,
   },
 });

@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Marker, Polyline } from 'react-native-maps';
 import { RouteResult } from '../types/routing';
-import { useTheme } from '../theme/useTheme';
 
 interface RouteLayerProps {
   selectedOrigin: { latitude: number; longitude: number } | null;
@@ -15,9 +14,6 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
   selectedDestination,
   currentRoute,
 }) => {
-  const { isDarkMode } = useTheme();
-  const iconColor = isDarkMode ? '#000000' : '#ffffff';
-
   return (
     <>
       {selectedOrigin && (
@@ -25,11 +21,14 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
           key={`origin-${selectedOrigin.latitude}-${selectedOrigin.longitude}`}
           coordinate={selectedOrigin}
           title="Origin"
-          anchor={{ x: 0.5, y: 0.5 }}
+          anchor={{ x: 0.5, y: 1 }}
           zIndex={2}
         >
-          <View style={[styles.markerRing, { backgroundColor: '#00e676' }]}>
-            <Text style={[styles.markerText, { color: iconColor }]}>A</Text>
+          <View style={styles.markerContainer}>
+            <View style={[styles.markerRing, { backgroundColor: '#00e676' }]}>
+              <Text style={styles.markerText}>A</Text>
+            </View>
+            <View style={styles.triangle} />
           </View>
         </Marker>
       )}
@@ -39,11 +38,14 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
           key={`dest-${selectedDestination.latitude}-${selectedDestination.longitude}`}
           coordinate={selectedDestination}
           title="Destination"
-          anchor={{ x: 0.5, y: 0.5 }}
+          anchor={{ x: 0.5, y: 1 }}
           zIndex={2}
         >
-          <View style={[styles.markerRing, { backgroundColor: '#ff3b30' }]}>
-            <Text style={[styles.markerText, { color: iconColor }]}>B</Text>
+          <View style={styles.markerContainer}>
+            <View style={[styles.markerRing, { backgroundColor: '#ff3b30' }]}>
+              <Text style={styles.markerText}>B</Text>
+            </View>
+            <View style={styles.triangle} />
           </View>
         </Marker>
       )}
@@ -70,21 +72,38 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
 };
 
 const styles = StyleSheet.create({
+  markerContainer: {
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+  },
   markerRing: {
     width: 32,
     height: 32,
     borderRadius: 16,
     borderWidth: 2.5,
-    borderColor: 'rgba(255, 255, 255, 0.85)',
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
+  },
+  triangle: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: '#ffffff',
+    marginTop: -1.5,
   },
   markerText: {
+    color: '#ffffff',
     fontSize: 15,
     fontWeight: '800',
     marginTop: -1, // slight optical adjustment
