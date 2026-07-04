@@ -44,8 +44,12 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({ distance, duration, 
     <View style={[styles.container, { bottom: Math.max(insets.bottom, 20), backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>{t('controlPanel.title')}</Text>
-        <TouchableOpacity onPress={onClear} hitSlop={{top: 10, right: 10, bottom: 10, left: 10}}>
-          <Ionicons name="close" size={24} color={colors.iconInactive} />
+        <TouchableOpacity
+          onPress={onClear}
+          hitSlop={{ top: 12, right: 12, bottom: 12, left: 12 }}
+          style={[styles.closeBtn, { backgroundColor: colors.background }]}
+        >
+          <Ionicons name="close" size={18} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
@@ -137,6 +141,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '800',
     color: '#0f172a',
+  },
+  closeBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonRow: {
     flexDirection: 'row',

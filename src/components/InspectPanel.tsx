@@ -26,13 +26,13 @@ export const InspectPanel: React.FC<InspectPanelProps> = ({
   const { colors } = useTheme();
 
   return (
-    <View style={[styles.container, { bottom: bottomOffset, backgroundColor: colors.surfaceOpaque, shadowColor: colors.shadow }]}>
+    <View style={[styles.container, { bottom: bottomOffset, backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
       <TouchableOpacity
-        style={styles.closeBtn}
+        style={[styles.closeBtn, { backgroundColor: colors.background }]}
         onPress={onClose}
-        hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+        hitSlop={{ top: 12, right: 12, bottom: 12, left: 12 }}
       >
-        <Ionicons name="close" size={24} color={colors.iconInactive} />
+        <Ionicons name="close" size={18} color={colors.textSecondary} />
       </TouchableOpacity>
 
       {isInspecting ? (
@@ -100,7 +100,11 @@ const styles = StyleSheet.create({
     top: 12,
     right: 12,
     zIndex: 10,
-    padding: 4,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loadingRow: {
     flexDirection: 'row',

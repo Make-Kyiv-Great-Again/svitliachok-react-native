@@ -288,7 +288,7 @@ export const MapScreen = () => {
       {/* Save Location Sheet */}
       {isSaveSheetOpen && inspectedStatus && (
         <SaveLocationSheet
-          bottomOffset={bottomOffset + 20}
+          bottomOffset={bottomOffset}
           suggestedName={inspectedStatus.address || ''}
           onCancel={() => setIsSaveSheetOpen(false)}
           onSave={(name: string, icon: SavedLocationIcon) => {
