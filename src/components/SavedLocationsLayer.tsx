@@ -32,6 +32,7 @@ interface SavedLocationsLayerProps {
 
 export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locations, inspectedLocation, onPress }) => {
   const markerRefs = useRef<Record<string, any>>({});
+  const prevActiveLocIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const activeLoc = inspectedLocation
@@ -42,16 +43,21 @@ export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locati
         )
       : null;
 
-    locations.forEach((loc) => {
-      const ref = markerRefs.current[loc.id];
-      if (ref) {
-        if (activeLoc && loc.id === activeLoc.id) {
-          setTimeout(() => ref.showCallout(), 50);
-        } else {
-          ref.hideCallout();
+    const activeLocId = activeLoc ? activeLoc.id : null;
+
+    if (activeLocId !== prevActiveLocIdRef.current) {
+      locations.forEach((loc) => {
+        const ref = markerRefs.current[loc.id];
+        if (ref) {
+          if (activeLocId && loc.id === activeLocId) {
+            ref.showCallout();
+          } else {
+            ref.hideCallout();
+          }
         }
-      }
-    });
+      });
+      prevActiveLocIdRef.current = activeLocId;
+    }
   }, [inspectedLocation, locations]);
 
   return (
@@ -67,7 +73,10 @@ export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locati
             }}
             coordinate={{ latitude: loc.latitude, longitude: loc.longitude }}
             title={loc.name}
-            onPress={() => onPress(loc)}
+            onPress={() => {
+              prevActiveLocIdRef.current = loc.id;
+              onPress(loc);
+            }}
             anchor={{ x: 0.5, y: 1 }}
           >
             <View style={styles.markerContainer}>
