@@ -1,9 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import { SavedLocation } from '../types/api';
-import { useTheme } from '../theme/useTheme';
 
 const ICON_MAP: Record<string, string> = {
   home:       'home',
@@ -27,34 +26,24 @@ function statusColor(status: SavedLocation['power_status']): string {
 
 interface SavedLocationsLayerProps {
   locations: SavedLocation[];
-  inspectedLocation?: { latitude: number; longitude: number } | null;
   onPress: (loc: SavedLocation) => void;
 }
 
-export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locations, inspectedLocation, onPress }) => {
-  const { colors } = useTheme();
-
+export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locations, onPress }) => {
   return (
     <>
       {locations.map((loc) => {
         const color = statusColor(loc.power_status);
         const iconName = (ICON_MAP[loc.icon] || 'location') as any;
-        const isSelected = inspectedLocation?.latitude === loc.latitude && inspectedLocation?.longitude === loc.longitude;
-
         return (
           <Marker
             key={loc.id}
             coordinate={{ latitude: loc.latitude, longitude: loc.longitude }}
+            title={loc.name}
             onPress={() => onPress(loc)}
             anchor={{ x: 0.5, y: 1 }}
-            zIndex={isSelected ? 10 : 1}
           >
             <View style={styles.markerContainer}>
-              {isSelected && (
-                <View style={[styles.nameBubble, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                  <Text style={[styles.nameText, { color: colors.textPrimary }]}>{loc.name}</Text>
-                </View>
-              )}
               <View style={[styles.pin, { backgroundColor: color }]}>
                 <Ionicons name={iconName} size={15} color="#fff" />
               </View>
@@ -70,18 +59,11 @@ export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locati
 const styles = StyleSheet.create({
   markerContainer: {
     alignItems: 'center',
-  },
-  nameBubble: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginBottom: 6,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  nameText: {
-    fontSize: 14,
-    fontWeight: '600',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
   },
   pin: {
     width: 32,

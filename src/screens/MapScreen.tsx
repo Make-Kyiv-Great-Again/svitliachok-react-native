@@ -190,7 +190,6 @@ export const MapScreen = () => {
         {/* Always show saved location pins */}
         <SavedLocationsLayer
           locations={savedLocations}
-          inspectedLocation={appMode === 'INSPECT' ? inspectedLocation : null}
           onPress={(loc) => {
             // In INSPECT mode, tapping a saved pin shows its status
             if (appMode === 'INSPECT') {

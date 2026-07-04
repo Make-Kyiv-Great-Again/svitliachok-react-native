@@ -74,6 +74,11 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
 const styles = StyleSheet.create({
   markerContainer: {
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
   },
   markerRing: {
     width: 32,

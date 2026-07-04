@@ -119,9 +119,8 @@ export const fetchBuildingsInRegion = async (
         status: status as 'ON' | 'OFF' | 'EMERGENCY' | 'UNKNOWN'
       };
     });
-  } catch (error: any) {
-    // Downgraded to warn to prevent Expo Error overlays in the UI during dev/network issues
-    console.warn("Failed to fetch viewport data:", error.message || "Network Error");
+  } catch (error) {
+    console.error("Failed to fetch viewport data:", error);
     return [];
   }
 };
