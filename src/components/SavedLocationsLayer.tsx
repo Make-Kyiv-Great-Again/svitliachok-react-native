@@ -51,7 +51,7 @@ export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locati
           >
             <View style={styles.markerContainer}>
               {isSelected && (
-                <View style={[styles.nameBubble, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+                <View style={[styles.nameBubble, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <Text style={[styles.nameText, { color: colors.textPrimary }]}>{loc.name}</Text>
                 </View>
               )}
@@ -70,21 +70,14 @@ export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locati
 const styles = StyleSheet.create({
   markerContainer: {
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
   },
   nameBubble: {
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
     marginBottom: 6,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#334155',
   },
   nameText: {
     fontSize: 14,
