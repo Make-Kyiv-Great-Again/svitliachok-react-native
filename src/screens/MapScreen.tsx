@@ -269,8 +269,8 @@ export const MapScreen = () => {
         />
       )}
 
-      {/* Inspect Panel */}
-      {appMode === 'INSPECT' && inspectedLocation && (
+      {/* Inspect Panel — hidden when save sheet is open */}
+      {appMode === 'INSPECT' && inspectedLocation && !isSaveSheetOpen && (
         <InspectPanel
           isInspecting={isInspecting}
           inspectedStatus={inspectedStatus}

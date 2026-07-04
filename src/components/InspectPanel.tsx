@@ -86,14 +86,14 @@ export const InspectPanel: React.FC<InspectPanelProps> = ({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    alignSelf: 'center',
-    width: '90%',
-    borderRadius: 16,
+    left: 16,
+    right: 16,
+    borderRadius: 24,
     padding: 20,
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 10,
   },
   closeBtn: {
     position: 'absolute',

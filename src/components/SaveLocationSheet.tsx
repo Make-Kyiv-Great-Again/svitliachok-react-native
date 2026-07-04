@@ -106,24 +106,26 @@ export const SaveLocationSheet: React.FC<SaveLocationSheetProps> = ({
               return (
                 <TouchableOpacity
                   key={item.key}
-                  style={[
-                    styles.iconCell,
+                  style={styles.iconCell}
+                  onPress={() => setSelectedIcon(item.key)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[
+                    styles.iconCellInner,
                     {
                       backgroundColor: isSelected ? colors.primaryDim : colors.background,
                       borderColor: isSelected ? colors.primary : 'transparent',
                     },
-                  ]}
-                  onPress={() => setSelectedIcon(item.key)}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons
-                    name={item.ionicon as any}
-                    size={22}
-                    color={isSelected ? colors.primary : colors.textSecondary}
-                  />
-                  <Text style={[styles.iconLabel, { color: isSelected ? colors.primary : colors.textSecondary }]}>
-                    {item.label}
-                  </Text>
+                  ]}>
+                    <Ionicons
+                      name={item.ionicon as any}
+                      size={22}
+                      color={isSelected ? colors.primary : colors.textSecondary}
+                    />
+                    <Text style={[styles.iconLabel, { color: isSelected ? colors.primary : colors.textSecondary }]}>
+                      {item.label}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               );
             })}
@@ -154,15 +156,15 @@ const styles = StyleSheet.create({
   },
   sheet: {
     position: 'absolute',
-    left: 12,
-    right: 12,
-    borderRadius: 28,
+    left: 16,
+    right: 16,
+    borderRadius: 24,
     paddingHorizontal: 20,
     paddingBottom: 20,
     paddingTop: 12,
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
     elevation: 14,
   },
   handle: {
@@ -218,16 +220,23 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginBottom: 18,
     marginHorizontal: -4,
+    rowGap: 8,
   },
   iconCell: {
-    width: `${100 / ICON_COLS}%` as any,
+    width: '25%',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconCellInner: {
+    width: '100%',
     paddingVertical: 10,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 12,
     borderWidth: 1.5,
     gap: 4,
-    paddingHorizontal: 4,
   },
   iconLabel: {
     fontSize: 10,
