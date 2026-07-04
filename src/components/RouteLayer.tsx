@@ -15,7 +15,8 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
   selectedDestination,
   currentRoute,
 }) => {
-  const { colors } = useTheme();
+  const { isDarkMode } = useTheme();
+  const iconColor = isDarkMode ? '#000000' : '#ffffff';
 
   return (
     <>
@@ -27,8 +28,8 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
           anchor={{ x: 0.5, y: 0.5 }}
           zIndex={2}
         >
-          <View style={[styles.markerRing, { backgroundColor: '#00e676', borderColor: colors.surface }]}>
-            <Text style={styles.markerText}>A</Text>
+          <View style={[styles.markerRing, { backgroundColor: '#00e676' }]}>
+            <Text style={[styles.markerText, { color: iconColor }]}>A</Text>
           </View>
         </Marker>
       )}
@@ -41,8 +42,8 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
           anchor={{ x: 0.5, y: 0.5 }}
           zIndex={2}
         >
-          <View style={[styles.markerRing, { backgroundColor: '#ff3b30', borderColor: colors.surface }]}>
-            <Text style={styles.markerText}>B</Text>
+          <View style={[styles.markerRing, { backgroundColor: '#ff3b30' }]}>
+            <Text style={[styles.markerText, { color: iconColor }]}>B</Text>
           </View>
         </Marker>
       )}
@@ -74,6 +75,7 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 2.5,
+    borderColor: 'rgba(255, 255, 255, 0.85)',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -83,7 +85,6 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   markerText: {
-    color: '#ffffff',
     fontSize: 15,
     fontWeight: '800',
     marginTop: -1, // slight optical adjustment

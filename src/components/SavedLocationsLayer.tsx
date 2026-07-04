@@ -31,7 +31,8 @@ interface SavedLocationsLayerProps {
 }
 
 export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locations, onPress }) => {
-  const { colors } = useTheme();
+  const { isDarkMode } = useTheme();
+  const iconColor = isDarkMode ? '#000000' : '#ffffff';
 
   return (
     <>
@@ -46,8 +47,8 @@ export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locati
             onPress={() => onPress(loc)}
             anchor={{ x: 0.5, y: 0.5 }}
           >
-            <View style={[styles.pin, { backgroundColor: color, borderColor: colors.surface }]}>
-              <Ionicons name={iconName} size={15} color="#fff" />
+            <View style={[styles.pin, { backgroundColor: color }]}>
+              <Ionicons name={iconName} size={15} color={iconColor} />
             </View>
           </Marker>
         );
@@ -62,6 +63,7 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 2.5,
+    borderColor: 'rgba(255, 255, 255, 0.85)',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
