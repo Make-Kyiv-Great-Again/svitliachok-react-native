@@ -24,7 +24,7 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
           anchor={{ x: 0.5, y: 0.5 }}
           zIndex={2}
         >
-          <View style={[styles.markerRing, { backgroundColor: '#10b981' }]}>
+          <View style={[styles.markerRing, { backgroundColor: '#00e676' }]}>
             <Text style={styles.markerText}>A</Text>
           </View>
         </Marker>
@@ -38,7 +38,7 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
           anchor={{ x: 0.5, y: 0.5 }}
           zIndex={2}
         >
-          <View style={[styles.markerRing, { backgroundColor: '#ef4444' }]}>
+          <View style={[styles.markerRing, { backgroundColor: '#ff3b30' }]}>
             <Text style={styles.markerText}>B</Text>
           </View>
         </Marker>
@@ -67,10 +67,10 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
 
 const styles = StyleSheet.create({
   markerRing: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 5,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2.5,
     borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
