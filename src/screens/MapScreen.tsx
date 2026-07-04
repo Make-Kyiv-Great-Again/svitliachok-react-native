@@ -482,6 +482,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
   },
   map: {
     ...StyleSheet.absoluteFillObject,
@@ -500,6 +504,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 4,
     height: 48,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
   },
   topBar: {
     flexDirection: 'row'
