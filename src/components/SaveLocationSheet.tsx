@@ -7,7 +7,6 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/useTheme';
@@ -23,6 +22,8 @@ const ICONS: { key: SavedLocationIcon; label: string; ionicon: string }[] = [
   { key: 'star',       label: 'Other',    ionicon: 'star-outline' },
   { key: 'location',   label: 'Place',    ionicon: 'location-outline' },
 ];
+
+const ICON_COLS = 4;
 
 interface SaveLocationSheetProps {
   onSave: (name: string, icon: SavedLocationIcon) => void;
@@ -47,29 +48,39 @@ export const SaveLocationSheet: React.FC<SaveLocationSheetProps> = ({
     onSave(trimmed, selectedIcon);
   };
 
+  const canSave = name.trim().length > 0;
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={StyleSheet.absoluteFill}
       pointerEvents="box-none"
     >
-      <View style={[styles.overlay]} pointerEvents="box-none">
+      <View style={styles.overlay} pointerEvents="box-none">
         <View
           style={[
             styles.sheet,
             { bottom: bottomOffset, backgroundColor: colors.surface, shadowColor: colors.shadow },
           ]}
         >
+          {/* Handle bar */}
+          <View style={[styles.handle, { backgroundColor: colors.border }]} />
+
           {/* Header */}
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.textPrimary }]}>Save Location</Text>
-            <TouchableOpacity onPress={onCancel} hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}>
-              <Ionicons name="close" size={24} color={colors.iconInactive} />
+            <TouchableOpacity
+              onPress={onCancel}
+              hitSlop={{ top: 12, right: 12, bottom: 12, left: 12 }}
+              style={[styles.closeBtn, { backgroundColor: colors.background }]}
+            >
+              <Ionicons name="close" size={18} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
           {/* Name Input */}
           <View style={[styles.inputContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <Ionicons name="pencil-outline" size={16} color={colors.textSecondary} style={styles.inputIcon} />
             <TextInput
               style={[styles.input, { color: colors.textPrimary }]}
               placeholder="Location name…"
@@ -80,6 +91,11 @@ export const SaveLocationSheet: React.FC<SaveLocationSheetProps> = ({
               returnKeyType="done"
               onSubmitEditing={handleSave}
             />
+            {name.length > 0 && (
+              <TouchableOpacity onPress={() => setName('')} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                <Ionicons name="close-circle" size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Icon Picker */}
@@ -92,13 +108,17 @@ export const SaveLocationSheet: React.FC<SaveLocationSheetProps> = ({
                   key={item.key}
                   style={[
                     styles.iconCell,
-                    { backgroundColor: isSelected ? colors.primaryDim : colors.background, borderColor: isSelected ? colors.primary : colors.border },
+                    {
+                      backgroundColor: isSelected ? colors.primaryDim : colors.background,
+                      borderColor: isSelected ? colors.primary : 'transparent',
+                    },
                   ]}
                   onPress={() => setSelectedIcon(item.key)}
+                  activeOpacity={0.7}
                 >
                   <Ionicons
                     name={item.ionicon as any}
-                    size={24}
+                    size={22}
                     color={isSelected ? colors.primary : colors.textSecondary}
                   />
                   <Text style={[styles.iconLabel, { color: isSelected ? colors.primary : colors.textSecondary }]}>
@@ -111,11 +131,15 @@ export const SaveLocationSheet: React.FC<SaveLocationSheetProps> = ({
 
           {/* Save Button */}
           <TouchableOpacity
-            style={[styles.saveBtn, { backgroundColor: name.trim() ? colors.primary : colors.border }]}
+            style={[
+              styles.saveBtn,
+              { backgroundColor: canSave ? colors.primary : colors.border },
+            ]}
             onPress={handleSave}
-            disabled={!name.trim()}
+            disabled={!canSave}
+            activeOpacity={0.85}
           >
-            <Ionicons name="bookmark" size={18} color="#fff" style={{ marginRight: 8 }} />
+            <Ionicons name="bookmark" size={17} color="#fff" style={{ marginRight: 7 }} />
             <Text style={styles.saveBtnText}>Save</Text>
           </TouchableOpacity>
         </View>
@@ -127,75 +151,100 @@ export const SaveLocationSheet: React.FC<SaveLocationSheetProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    justifyContent: 'flex-end',
   },
   sheet: {
     position: 'absolute',
-    left: 16,
-    right: 16,
-    borderRadius: 24,
-    padding: 24,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 16,
+    left: 12,
+    right: 12,
+    borderRadius: 28,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 12,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 14,
+  },
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   title: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '700',
+    letterSpacing: -0.3,
+  },
+  closeBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    marginBottom: 20,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginBottom: 18,
+    height: 46,
+  },
+  inputIcon: {
+    marginRight: 8,
   },
   input: {
-    fontSize: 16,
-    height: 44,
+    flex: 1,
+    fontSize: 15,
+    height: '100%',
   },
   sectionLabel: {
     fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 0.8,
-    marginBottom: 12,
+    letterSpacing: 0.7,
+    marginBottom: 10,
   },
   iconGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 24,
+    marginBottom: 18,
+    marginHorizontal: -4,
   },
   iconCell: {
-    width: '22%',
-    aspectRatio: 1,
-    borderRadius: 14,
-    borderWidth: 1.5,
+    width: `${100 / ICON_COLS}%` as any,
+    paddingVertical: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 12,
+    borderWidth: 1.5,
     gap: 4,
+    paddingHorizontal: 4,
   },
   iconLabel: {
     fontSize: 10,
     fontWeight: '600',
+    textAlign: 'center',
   },
   saveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
+    paddingVertical: 15,
     borderRadius: 16,
   },
   saveBtnText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
+    letterSpacing: 0.2,
   },
 });
