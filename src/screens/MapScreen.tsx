@@ -173,7 +173,7 @@ export const MapScreen = () => {
         userInterfaceStyle={colors.mapStyle}
         customMapStyle={isDarkMode ? darkMapStyle : []}
       >
-        {appMode === 'INSPECT' && inspectedLocation && (
+        {appMode === 'INSPECT' && inspectedLocation && !savedLocations.some(l => l.latitude === inspectedLocation.latitude && l.longitude === inspectedLocation.longitude) && (
           <Marker coordinate={inspectedLocation}>
             <View style={styles.inspectMarkerPin} />
           </Marker>
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
   },
   fetchingOverlay: {
     position: 'absolute',
-    top: 90,
+    top: 170,
     right: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     padding: 10,
