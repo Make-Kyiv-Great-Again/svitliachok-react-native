@@ -104,7 +104,7 @@ export const MapScreen = () => {
         const result = await fetchStatusByCoordinates(coord.latitude, coord.longitude);
         setInspectedStatus(result);
       } catch (err: any) {
-        console.error('Inspect error:', err);
+        console.warn('Inspect error:', err);
         setInspectError('No data available for this location.');
       } finally {
         setIsInspecting(false);

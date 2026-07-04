@@ -120,7 +120,7 @@ export const fetchBuildingsInRegion = async (
       };
     });
   } catch (error) {
-    console.error("Failed to fetch viewport data:", error);
+    console.warn("Failed to fetch viewport data:", error);
     return [];
   }
 };

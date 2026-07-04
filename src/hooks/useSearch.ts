@@ -27,7 +27,7 @@ export function useSearch(language: string) {
         const data = await response.json();
         setSearchResults(data);
       } catch (error) {
-        console.error('Search error:', error);
+        console.warn('Search error:', error);
       } finally {
         setIsSearching(false);
       }

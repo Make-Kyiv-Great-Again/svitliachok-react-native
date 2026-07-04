@@ -123,7 +123,7 @@ export const calculateRoute = async (
       };
     }
   } catch (error) {
-    console.error("Error fetching route from OSRM:", error);
+    console.warn("Error fetching route from OSRM:", error);
   }
 
   // Fallback

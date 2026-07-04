@@ -86,7 +86,7 @@ export const useAppStore = create<AppState>()(
           });
           console.log(`Successfully synced ${polygons.length} buildings for region.`);
         } catch (error) {
-          console.error('Failed to sync buildings:', error);
+          console.warn('Failed to sync buildings:', error);
           set({ isSyncing: false });
         }
       },
