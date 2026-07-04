@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,10 +26,34 @@ function statusColor(status: SavedLocation['power_status']): string {
 
 interface SavedLocationsLayerProps {
   locations: SavedLocation[];
+  inspectedLocation?: { latitude: number; longitude: number } | null;
   onPress: (loc: SavedLocation) => void;
 }
 
-export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locations, onPress }) => {
+export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locations, inspectedLocation, onPress }) => {
+  const markerRefs = useRef<Record<string, any>>({});
+
+  useEffect(() => {
+    const activeLoc = inspectedLocation
+      ? locations.find(
+          (l) =>
+            l.latitude === inspectedLocation.latitude &&
+            l.longitude === inspectedLocation.longitude
+        )
+      : null;
+
+    locations.forEach((loc) => {
+      const ref = markerRefs.current[loc.id];
+      if (ref) {
+        if (activeLoc && loc.id === activeLoc.id) {
+          setTimeout(() => ref.showCallout(), 50);
+        } else {
+          ref.hideCallout();
+        }
+      }
+    });
+  }, [inspectedLocation, locations]);
+
   return (
     <>
       {locations.map((loc) => {
@@ -38,6 +62,9 @@ export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locati
         return (
           <Marker
             key={loc.id}
+            ref={(el) => {
+              if (el) markerRefs.current[loc.id] = el;
+            }}
             coordinate={{ latitude: loc.latitude, longitude: loc.longitude }}
             title={loc.name}
             onPress={() => onPress(loc)}
