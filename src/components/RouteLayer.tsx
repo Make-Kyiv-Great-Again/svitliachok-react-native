@@ -67,9 +67,9 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
 
 const styles = StyleSheet.create({
   markerRing: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     borderWidth: 2.5,
     borderColor: '#ffffff',
     alignItems: 'center',
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   },
   markerText: {
     color: '#ffffff',
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '800',
     marginTop: -1, // slight optical adjustment
   },

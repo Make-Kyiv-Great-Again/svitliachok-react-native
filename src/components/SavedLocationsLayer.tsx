@@ -43,8 +43,8 @@ export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locati
             onPress={() => onPress(loc)}
             anchor={{ x: 0.5, y: 0.5 }}
           >
-            <View style={[styles.pin, { backgroundColor: color, borderColor: `${color}80` }]}>
-              <Ionicons name={iconName} size={16} color="#fff" />
+            <View style={[styles.pin, { backgroundColor: color }]}>
+              <Ionicons name={iconName} size={15} color="#fff" />
             </View>
           </Marker>
         );
@@ -55,16 +55,17 @@ export const SavedLocationsLayer: React.FC<SavedLocationsLayerProps> = ({ locati
 
 const styles = StyleSheet.create({
   pin: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 3,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2.5,
+    borderColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
   },
 });
