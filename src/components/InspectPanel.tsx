@@ -11,6 +11,7 @@ interface InspectPanelProps {
   inspectError: string | null;
   bottomOffset: number;
   onClose: () => void;
+  onSave: () => void;
 }
 
 export const InspectPanel: React.FC<InspectPanelProps> = ({
@@ -19,6 +20,7 @@ export const InspectPanel: React.FC<InspectPanelProps> = ({
   inspectError,
   bottomOffset,
   onClose,
+  onSave,
 }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -66,6 +68,15 @@ export const InspectPanel: React.FC<InspectPanelProps> = ({
               {inspectedStatus.status_reason}
             </Text>
           )}
+
+          {/* Save Button */}
+          <TouchableOpacity
+            style={[styles.saveBtn, { backgroundColor: colors.primaryDim, borderColor: colors.primary }]}
+            onPress={onSave}
+          >
+            <Ionicons name="bookmark-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
+            <Text style={[styles.saveBtnText, { color: colors.primary }]}>Save location</Text>
+          </TouchableOpacity>
         </View>
       ) : null}
     </View>
@@ -126,5 +137,18 @@ const styles = StyleSheet.create({
   subtext: {
     fontSize: 13,
     marginTop: 4,
+  },
+  saveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+  },
+  saveBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

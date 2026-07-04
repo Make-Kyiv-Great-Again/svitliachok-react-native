@@ -49,3 +49,15 @@ export interface BuildingPolygon {
   house: string;
   status: 'ON' | 'OFF' | 'EMERGENCY' | 'UNKNOWN';
 }
+
+export type SavedLocationIcon = 'home' | 'business' | 'school' | 'fitness' | 'restaurant' | 'heart' | 'star' | 'location';
+
+export interface SavedLocation {
+  id: string;
+  name: string;
+  icon: SavedLocationIcon;
+  latitude: number;
+  longitude: number;
+  power_status: 'ON' | 'OFF' | 'EMERGENCY' | 'UNKNOWN';
+  savedAt: number;
+}

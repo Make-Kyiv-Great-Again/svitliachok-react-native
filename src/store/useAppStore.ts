@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Network from 'expo-network';
-import { BuildingPolygon } from '../types/api';
+import { BuildingPolygon, SavedLocation } from '../types/api';
 import { fetchBuildingsInRegion } from '../api/client';
 
 export type TransportMode = 'Driving' | 'Walking';
@@ -17,12 +17,15 @@ interface AppState {
   transportMode: TransportMode;
   routePreference: RoutePreference;
   themePreference: ThemePreference;
+  savedLocations: SavedLocation[];
 
-  
   setOnlineStatus: (status: boolean) => void;
   setTransportMode: (mode: TransportMode) => void;
   setRoutePreference: (pref: RoutePreference) => void;
   setThemePreference: (theme: ThemePreference) => void;
+  addSavedLocation: (loc: SavedLocation) => void;
+  removeSavedLocation: (id: string) => void;
+  updateSavedLocationStatus: (id: string, power_status: SavedLocation['power_status']) => void;
   syncOutagesForRegion: (south: number, west: number, north: number, east: number) => Promise<void>;
 }
 
@@ -36,11 +39,25 @@ export const useAppStore = create<AppState>()(
       transportMode: 'Driving',
       routePreference: 'Fastest',
       themePreference: 'system',
+      savedLocations: [],
 
       setOnlineStatus: (status: boolean) => set({ isOnline: status }),
       setTransportMode: (mode: TransportMode) => set({ transportMode: mode }),
       setRoutePreference: (pref: RoutePreference) => set({ routePreference: pref }),
       setThemePreference: (theme: ThemePreference) => set({ themePreference: theme }),
+
+      addSavedLocation: (loc: SavedLocation) =>
+        set((state) => ({ savedLocations: [...state.savedLocations, loc] })),
+
+      removeSavedLocation: (id: string) =>
+        set((state) => ({ savedLocations: state.savedLocations.filter((l) => l.id !== id) })),
+
+      updateSavedLocationStatus: (id: string, power_status: SavedLocation['power_status']) =>
+        set((state) => ({
+          savedLocations: state.savedLocations.map((l) =>
+            l.id === id ? { ...l, power_status } : l,
+          ),
+        })),
 
       syncOutagesForRegion: async (south, west, north, east) => {
         const networkState = await Network.getNetworkStateAsync();
@@ -83,6 +100,7 @@ export const useAppStore = create<AppState>()(
         transportMode: state.transportMode,
         routePreference: state.routePreference,
         themePreference: state.themePreference,
+        savedLocations: state.savedLocations,
       }),
     }
   )

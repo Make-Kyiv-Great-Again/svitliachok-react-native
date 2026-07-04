@@ -12,12 +12,14 @@ import { useTheme } from '../theme/useTheme';
 import { useRouting } from '../hooks/useRouting';
 import { useSearch } from '../hooks/useSearch';
 import { fetchStatusByCoordinates } from '../api/client';
-import { StatusResponse } from '../types/api';
+import { StatusResponse, SavedLocation, SavedLocationIcon } from '../types/api';
 
 import { ControlPanel } from '../components/ControlPanel';
 import { MapTopBar } from '../components/MapTopBar';
 import { InspectPanel } from '../components/InspectPanel';
 import { RouteLayer } from '../components/RouteLayer';
+import { SavedLocationsLayer } from '../components/SavedLocationsLayer';
+import { SaveLocationSheet } from '../components/SaveLocationSheet';
 import { darkMapStyle } from '../theme/mapStyles';
 
 const KYIV_CENTER = {
@@ -32,7 +34,7 @@ type AppMode = 'INSPECT' | 'ROUTING';
 export const MapScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
-  const { buildingPolygons, syncOutagesForRegion, transportMode } = useAppStore();
+  const { buildingPolygons, syncOutagesForRegion, transportMode, savedLocations, addSavedLocation, updateSavedLocationStatus } = useAppStore();
   const { i18n } = useTranslation();
   const { colors, isDarkMode } = useTheme();
 
@@ -46,6 +48,7 @@ export const MapScreen = () => {
   const [inspectedStatus, setInspectedStatus] = useState<StatusResponse | null>(null);
   const [isInspecting, setIsInspecting] = useState(false);
   const [inspectError, setInspectError] = useState<string | null>(null);
+  const [isSaveSheetOpen, setIsSaveSheetOpen] = useState(false);
 
   // Routing Hook
   const {
@@ -183,6 +186,24 @@ export const MapScreen = () => {
             currentRoute={currentRoute}
           />
         )}
+
+        {/* Always show saved location pins */}
+        <SavedLocationsLayer
+          locations={savedLocations}
+          onPress={(loc) => {
+            // In INSPECT mode, tapping a saved pin shows its status
+            if (appMode === 'INSPECT') {
+              setInspectedLocation({ latitude: loc.latitude, longitude: loc.longitude });
+              setInspectedStatus(null);
+              setIsInspecting(true);
+              setInspectError(null);
+              fetchStatusByCoordinates(loc.latitude, loc.longitude)
+                .then((res) => { setInspectedStatus(res); updateSavedLocationStatus(loc.id, res.power_status); })
+                .catch(() => setInspectError('No data available for this location.'))
+                .finally(() => setIsInspecting(false));
+            }
+          }}
+        />
       </MapView>
 
       {/* Floating Settings Button */}
@@ -258,6 +279,30 @@ export const MapScreen = () => {
           onClose={() => {
             setInspectedLocation(null);
             setInspectedStatus(null);
+            setIsSaveSheetOpen(false);
+          }}
+          onSave={() => setIsSaveSheetOpen(true)}
+        />
+      )}
+
+      {/* Save Location Sheet */}
+      {isSaveSheetOpen && inspectedStatus && (
+        <SaveLocationSheet
+          bottomOffset={bottomOffset + 20}
+          suggestedName={inspectedStatus.address || ''}
+          onCancel={() => setIsSaveSheetOpen(false)}
+          onSave={(name: string, icon: SavedLocationIcon) => {
+            const newLoc: SavedLocation = {
+              id: `${Date.now()}`,
+              name,
+              icon,
+              latitude: inspectedLocation!.latitude,
+              longitude: inspectedLocation!.longitude,
+              power_status: inspectedStatus.power_status ?? 'UNKNOWN',
+              savedAt: Date.now(),
+            };
+            addSavedLocation(newLoc);
+            setIsSaveSheetOpen(false);
           }}
         />
       )}
