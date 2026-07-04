@@ -243,9 +243,9 @@ export const MapScreen = () => {
 
       {/* Buildings Fetching Indicator */}
       {isFetchingBuildings && (
-        <View style={styles.fetchingOverlay}>
+        <View style={[styles.fetchingOverlay, { top: topPadding + 56, backgroundColor: colors.surfaceOpaque }]}>
           <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={styles.fetchingText}>Scanning area...</Text>
+          <Text style={[styles.fetchingText, { color: colors.textPrimary }]}>Scanning area...</Text>
         </View>
       )}
 
@@ -359,9 +359,7 @@ const styles = StyleSheet.create({
   },
   fetchingOverlay: {
     position: 'absolute',
-    top: 170,
     right: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     padding: 10,
     borderRadius: 20,
     flexDirection: 'row',
@@ -376,7 +374,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 12,
     fontWeight: '600',
-    color: '#F59E0B',
   },
   errorContainer: {
     position: 'absolute',
