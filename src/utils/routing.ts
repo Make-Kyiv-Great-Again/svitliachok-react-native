@@ -1,18 +1,8 @@
 import { LatLng } from 'react-native-maps';
 import { BuildingPolygon } from '../types/api';
+import { RouteResult, RouteSegment } from '../types/routing';
 
-export interface RouteSegment {
-  coordinates: LatLng[];
-  status: 'SAFE' | 'UNKNOWN' | 'DANGER';
-}
-
-export interface RouteResult {
-  coordinates: LatLng[];
-  segments: RouteSegment[];
-  distance: number; // in meters
-  duration: number; // in seconds
-  status: 'SAFE' | 'UNKNOWN' | 'DANGER';
-}
+export type { RouteResult, RouteSegment };
 
 export const calculateRoute = async (
   origin: LatLng,

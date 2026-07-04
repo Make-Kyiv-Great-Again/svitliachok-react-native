@@ -1,18 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator, TouchableOpacity, TextInput, Keyboard } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, TouchableOpacity, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import MapView, { Marker, Polyline, Polygon, MapPressEvent, Region, Circle } from 'react-native-maps';
+import MapView, { Marker, MapPressEvent, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppStore } from '../store/useAppStore';
-import { ControlPanel } from '../components/ControlPanel';
-import { calculateRoute } from '../utils/routing';
-import { fetchStatusByCoordinates } from '../api/client';
 import { useNavigation } from '@react-navigation/native';
-import { StatusResponse } from '../types/api';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '../theme/useTheme';
 
+import { useAppStore } from '../store/useAppStore';
+import { useTheme } from '../theme/useTheme';
+import { useRouting } from '../hooks/useRouting';
+import { useSearch } from '../hooks/useSearch';
+import { fetchStatusByCoordinates } from '../api/client';
+import { StatusResponse } from '../types/api';
+
+import { ControlPanel } from '../components/ControlPanel';
+import { MapTopBar } from '../components/MapTopBar';
+import { InspectPanel } from '../components/InspectPanel';
+import { RouteLayer } from '../components/RouteLayer';
 import { darkMapStyle } from '../theme/mapStyles';
 
 const KYIV_CENTER = {
@@ -27,173 +32,106 @@ type AppMode = 'INSPECT' | 'ROUTING';
 export const MapScreen = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
-  const { buildingPolygons, syncOutagesForRegion, transportMode, routePreference } = useAppStore();
-  const { t, i18n } = useTranslation();
+  const { buildingPolygons, syncOutagesForRegion, transportMode } = useAppStore();
+  const { i18n } = useTranslation();
   const { colors, isDarkMode } = useTheme();
+
   const [appMode, setAppMode] = useState<AppMode>('INSPECT');
-  
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  
-  // Routing State
-  const [selectedOrigin, setSelectedOrigin] = useState<{latitude: number, longitude: number} | null>(null);
-  const [selectedDestination, setSelectedDestination] = useState<{latitude: number, longitude: number} | null>(null);
-  const [currentRoute, setCurrentRoute] = useState<{
-    coordinates: {latitude: number, longitude: number}[];
-    segments: {coordinates: {latitude: number, longitude: number}[], status: 'SAFE'|'UNKNOWN'|'DANGER'}[];
-    distance: number;
-    duration: number;
-    status: 'SAFE' | 'UNKNOWN' | 'DANGER';
-  }>({ coordinates: [], segments: [], distance: 0, duration: 0, status: 'UNKNOWN' });
-  const [alternativeRoute, setAlternativeRoute] = useState<{
-    coordinates: {latitude: number, longitude: number}[];
-    segments: {coordinates: {latitude: number, longitude: number}[], status: 'SAFE'|'UNKNOWN'|'DANGER'}[];
-    distance: number;
-    duration: number;
-    status: 'SAFE' | 'UNKNOWN' | 'DANGER';
-  } | null>(null);
-  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
-  
-  // Search UI State
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [isFetchingBuildings, setIsFetchingBuildings] = useState(false);
 
   // Inspect State
-  const [inspectedLocation, setInspectedLocation] = useState<{latitude: number, longitude: number} | null>(null);
+  const [inspectedLocation, setInspectedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [inspectedStatus, setInspectedStatus] = useState<StatusResponse | null>(null);
   const [isInspecting, setIsInspecting] = useState(false);
   const [inspectError, setInspectError] = useState<string | null>(null);
 
-  const [isFetchingBuildings, setIsFetchingBuildings] = useState(false);
+  // Routing Hook
+  const {
+    selectedOrigin,
+    selectedDestination,
+    currentRoute,
+    alternativeRoute,
+    isLoadingRoute,
+    setOrigin,
+    setDestination,
+    clearRoute,
+    swapAlternative,
+  } = useRouting({ appMode, transportMode, buildingPolygons });
+
+  // Search Hook
+  const {
+    isSearchOpen,
+    setIsSearchOpen,
+    searchQuery,
+    setSearchQuery,
+    searchResults,
+    isSearching,
+    closeSearch,
+  } = useSearch(i18n.language);
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setErrorMsg('Permission to access location was denied');
         return;
       }
-
-      let loc = await Location.getCurrentPositionAsync({});
+      const loc = await Location.getCurrentPositionAsync({});
       setLocation(loc);
     })();
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      if (appMode !== 'ROUTING' || !selectedOrigin || !selectedDestination) {
-        return;
-      }
-      
-      setIsLoadingRoute(true);
-      setAlternativeRoute(null);
-      
-      const defaultRoute = await calculateRoute(selectedOrigin, selectedDestination, transportMode, 'Fastest', buildingPolygons);
-      setCurrentRoute(defaultRoute);
-
-      if (defaultRoute.status === 'UNKNOWN' || defaultRoute.status === 'DANGER') {
-        const altRoute = await calculateRoute(selectedOrigin, selectedDestination, transportMode, 'Illuminated', buildingPolygons);
-        
-        if (Math.abs(altRoute.distance - defaultRoute.distance) > 10 || altRoute.status !== defaultRoute.status) {
-          setAlternativeRoute(altRoute);
-        }
-      }
-
-      setIsLoadingRoute(false);
-    })();
-  }, [selectedOrigin, selectedDestination, transportMode, buildingPolygons, appMode]);
-
   const handleMapPress = async (e: MapPressEvent) => {
     if (isSearchOpen) {
-      setIsSearchOpen(false);
+      closeSearch();
       Keyboard.dismiss();
+      return;
     }
 
     const coord = e.nativeEvent.coordinate;
-    
+
     if (appMode === 'INSPECT') {
       setInspectedLocation(coord);
       setIsInspecting(true);
       setInspectError(null);
       setInspectedStatus(null);
-      
       try {
         const result = await fetchStatusByCoordinates(coord.latitude, coord.longitude);
         setInspectedStatus(result);
       } catch (err: any) {
-        console.error("Inspect error:", err);
-        setInspectError("No data available for this location.");
+        console.error('Inspect error:', err);
+        setInspectError('No data available for this location.');
       } finally {
         setIsInspecting(false);
       }
     } else {
-      // Routing Mode
       if (!selectedOrigin || (selectedOrigin && selectedDestination)) {
-        setSelectedOrigin(coord);
-        setSelectedDestination(null);
-        setCurrentRoute({ coordinates: [], segments: [], distance: 0, duration: 0, status: 'UNKNOWN' });
+        setOrigin(coord);
       } else {
-        setSelectedDestination(coord);
+        setDestination(coord);
       }
     }
   };
 
   const handleRegionChange = async (region: Region) => {
     if (region.latitudeDelta > 0.05) return;
-    
     const south = region.latitude - region.latitudeDelta / 2;
     const north = region.latitude + region.latitudeDelta / 2;
     const west = region.longitude - region.longitudeDelta / 2;
     const east = region.longitude + region.longitudeDelta / 2;
-    
     setIsFetchingBuildings(true);
     await syncOutagesForRegion(south, west, north, east);
     setIsFetchingBuildings(false);
   };
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(async () => {
-      if (searchQuery.length < 3) {
-        setSearchResults([]);
-        return;
-      }
-      setIsSearching(true);
-      try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery + ', Kyiv')}&format=json&limit=5&addressdetails=1`,
-          {
-            headers: {
-              'User-Agent': 'SvitliachokApp/1.0',
-              'Accept-Language': i18n.language.startsWith('uk') ? 'uk,en;q=0.9' : 'en,uk;q=0.9'
-            }
-          }
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setSearchResults(data);
-      } catch (error) {
-        console.error("Search error:", error);
-      } finally {
-        setIsSearching(false);
-      }
-    }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
-
   const handleSelectSearchResult = async (result: any) => {
     Keyboard.dismiss();
-    setIsSearchOpen(false);
-    setSearchQuery('');
-    setSearchResults([]);
-    
+    closeSearch();
     const coord = {
       latitude: parseFloat(result.lat),
-      longitude: parseFloat(result.lon)
+      longitude: parseFloat(result.lon),
     };
 
     if (appMode === 'INSPECT') {
@@ -201,74 +139,29 @@ export const MapScreen = () => {
       setIsInspecting(true);
       setInspectError(null);
       setInspectedStatus(null);
-      
       try {
         const statusResult = await fetchStatusByCoordinates(coord.latitude, coord.longitude);
         setInspectedStatus(statusResult);
       } catch (err: any) {
-        console.error("Inspect error:", err);
-        setInspectError(t('map.errorNoData'));
+        setInspectError('No data available for this location.');
       } finally {
         setIsInspecting(false);
       }
     } else {
-      // Routing Mode
       if (!selectedOrigin || (selectedOrigin && selectedDestination)) {
-        setSelectedOrigin(coord);
-        setSelectedDestination(null);
-        setCurrentRoute({ coordinates: [], segments: [], distance: 0, duration: 0, status: 'UNKNOWN' });
+        setOrigin(coord);
       } else {
-        setSelectedDestination(coord);
+        setDestination(coord);
       }
     }
   };
 
-  const renderInspectBottomBlock = () => {
-    if (appMode !== 'INSPECT' || !inspectedLocation) return null;
-
-    return (
-      <View style={[styles.inspectBottomBlock, { bottom: Math.max(insets.bottom, 20), backgroundColor: colors.surfaceOpaque, shadowColor: colors.shadow }]}>
-        <TouchableOpacity 
-          style={styles.inspectCloseBtn} 
-          onPress={() => {
-            setInspectedLocation(null);
-            setInspectedStatus(null);
-          }}
-          hitSlop={{top: 10, right: 10, bottom: 10, left: 10}}
-        >
-          <Ionicons name="close" size={24} color={colors.iconInactive} />
-        </TouchableOpacity>
-        
-        {isInspecting ? (
-          <View style={styles.inspectLoadingRow}>
-            <ActivityIndicator size="small" color={colors.primary} />
-          </View>
-        ) : inspectError ? (
-          <Text style={styles.inspectErrorText}>{inspectError}</Text>
-        ) : inspectedStatus ? (
-          <View>
-            <Text style={[styles.inspectTitle, { color: colors.textPrimary }]}>{inspectedStatus.address || 'Address Unknown'}</Text>
-            <View style={styles.inspectStatusRow}>
-              <View style={[styles.statusDot, { backgroundColor: inspectedStatus.power_status === 'ON' ? colors.primary : colors.textSecondary }]} />
-              <Text style={[styles.inspectStatusText, { color: colors.textPrimary }]}>
-                {inspectedStatus.power_status === 'ON' ? t('map.status.on') : 
-                 inspectedStatus.power_status === 'OFF' ? t('map.status.off') : 
-                 inspectedStatus.power_status === 'EMERGENCY' ? t('map.status.emergency') :
-                 t('map.status.unknown')}
-              </Text>
-            </View>
-            {inspectedStatus.status_reason && (
-              <Text style={[styles.inspectSubtext, { color: colors.textSecondary }]}>{inspectedStatus.status_reason}</Text>
-            )}
-          </View>
-        ) : null}
-      </View>
-    );
-  };
+  const topPadding = Math.max(insets.top, 10);
+  const bottomOffset = Math.max(insets.bottom, 20);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <MapView 
+      <MapView
         style={styles.map}
         initialRegion={KYIV_CENTER}
         showsUserLocation={true}
@@ -283,44 +176,19 @@ export const MapScreen = () => {
           </Marker>
         )}
 
-        {/* Building Polygons removed as per user request to not draw any houses */}
-
-        {appMode === 'ROUTING' && selectedOrigin && (
-          <Marker 
-            key={`origin-${selectedOrigin.latitude}-${selectedOrigin.longitude}`}
-            coordinate={selectedOrigin} 
-            title="Origin" 
-            pinColor="green" 
+        {appMode === 'ROUTING' && (
+          <RouteLayer
+            selectedOrigin={selectedOrigin}
+            selectedDestination={selectedDestination}
+            currentRoute={currentRoute}
           />
         )}
-
-        {appMode === 'ROUTING' && selectedDestination && (
-          <Marker 
-            key={`dest-${selectedDestination.latitude}-${selectedDestination.longitude}`}
-            coordinate={selectedDestination} 
-            title="Destination" 
-            pinColor="blue" 
-          />
-        )}
-
-        {appMode === 'ROUTING' && currentRoute.segments.map((segment, index) => (
-          <Polyline
-            key={`route-segment-${currentRoute.distance}-${index}`}
-            coordinates={segment.coordinates}
-            strokeColor={
-              segment.status === 'DANGER' ? '#ef4444' : 
-              segment.status === 'UNKNOWN' ? '#94a3b8' : 
-              '#00e676'
-            }
-            strokeWidth={5}
-          />
-        ))}
       </MapView>
 
       {/* Floating Settings Button */}
       {!isSearchOpen && (
-        <TouchableOpacity 
-          style={[styles.settingsBtn, { top: Math.max(insets.top, 10), backgroundColor: colors.surface, shadowColor: colors.shadow }]}
+        <TouchableOpacity
+          style={[styles.settingsBtn, { top: topPadding, backgroundColor: colors.surface, shadowColor: colors.shadow }]}
           onPress={() => navigation.navigate('Settings')}
         >
           <Ionicons name="settings-outline" size={20} color={colors.textSecondary} />
@@ -328,142 +196,71 @@ export const MapScreen = () => {
       )}
 
       {/* Top Floating Bar */}
-      <View style={[styles.topBarContainer, { paddingTop: Math.max(insets.top, 10) }]} pointerEvents="box-none">
-        {isSearchOpen ? (
-          <View style={styles.searchBarContainer}>
-            <View style={[styles.searchInputRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Ionicons name="search" size={20} color={colors.iconInactive} style={styles.searchIconLeft} />
-              <TextInput
-                style={[styles.searchInputSingle, { color: colors.textPrimary }]}
-                placeholder={t('map.searchPlaceholder')}
-                placeholderTextColor={colors.textSecondary}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoFocus
-              />
-              <TouchableOpacity onPress={() => { setIsSearchOpen(false); setSearchQuery(''); setSearchResults([]); }}>
-                <Ionicons name="close" size={20} color={colors.iconInactive} />
-              </TouchableOpacity>
-            </View>
-            
-            {isSearching && (
-               <ActivityIndicator size="small" color={colors.primary} style={{marginVertical: 10}} />
-            )}
-            
-            {!isSearching && searchResults.length > 0 && (
-              <View style={[styles.searchResultsContainer, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
-                {searchResults.map((item, index) => (
-                  <TouchableOpacity 
-                    key={item.place_id || index} 
-                    style={[styles.searchResultItem, { borderBottomColor: colors.border }]} 
-                    onPress={() => handleSelectSearchResult(item)}
-                  >
-                    <Ionicons name="location-outline" size={20} color={colors.primary} style={styles.searchResultIcon} />
-                    <Text style={[styles.searchResultText, { color: colors.textPrimary }]} numberOfLines={2}>
-                      {item.display_name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
-        ) : (
-          <View style={[styles.topBarWrapper, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
-            <View style={styles.topBar}>
-              <TouchableOpacity 
-                style={[
-                  styles.modeButton, 
-                  appMode === 'INSPECT' && [styles.modeButtonActive, { backgroundColor: colors.selected }]
-                ]}
-                onPress={() => setAppMode('INSPECT')}
-              >
-                <Text style={[styles.modeButtonText, { color: colors.textSecondary }, appMode === 'INSPECT' && [styles.modeButtonTextActive, { color: colors.textPrimary }]]}>
-                  {t('map.modeInspect')}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[
-                  styles.modeButton, 
-                  appMode === 'ROUTING' && [styles.modeButtonActive, { backgroundColor: colors.selected }]
-                ]}
-                onPress={() => setAppMode('ROUTING')}
-              >
-                <Text style={[styles.modeButtonText, { color: colors.textSecondary }, appMode === 'ROUTING' && [styles.modeButtonTextActive, { color: colors.textPrimary }]]}>
-                  {t('map.modePaths')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            
-            <TouchableOpacity 
-              style={[styles.searchIconBtn, { backgroundColor: colors.surface }]} 
-              onPress={() => setIsSearchOpen(true)}
-            >
-              <Ionicons name="search" size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-          </View>
-        )}
-        
-        {appMode === 'ROUTING' && !isSearchOpen && (!selectedOrigin || !selectedDestination) && (
-          <View style={[styles.instructionContainer, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
-            {!selectedOrigin && !selectedDestination && (
-              <Text style={[styles.instructionText, { color: colors.textSecondary }]}>{t('map.pathStart')}</Text>
-            )}
-            {selectedOrigin && !selectedDestination && (
-              <Text style={[styles.instructionText, { color: colors.textSecondary }]}>{t('map.pathDest')}</Text>
-            )}
-          </View>
-        )}
-      </View>
-      
+      <MapTopBar
+        appMode={appMode}
+        onModeChange={setAppMode}
+        isSearchOpen={isSearchOpen}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        onSearchOpen={() => setIsSearchOpen(true)}
+        onSearchClose={closeSearch}
+        searchResults={searchResults}
+        isSearching={isSearching}
+        onSelectSearchResult={handleSelectSearchResult}
+        selectedOrigin={selectedOrigin}
+        selectedDestination={selectedDestination}
+        topPadding={topPadding}
+      />
+
+      {/* Route Loading Overlay */}
       {isLoadingRoute && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Calculating route...</Text>
         </View>
       )}
-      
+
+      {/* Buildings Fetching Indicator */}
       {isFetchingBuildings && (
         <View style={styles.fetchingOverlay}>
           <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={styles.fetchingText}>Scanning houses...</Text>
+          <Text style={styles.fetchingText}>Scanning area...</Text>
         </View>
       )}
 
+      {/* Error Banner */}
       {errorMsg && (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{errorMsg}</Text>
         </View>
       )}
 
+      {/* Routing Control Panel */}
       {appMode === 'ROUTING' && selectedOrigin && selectedDestination && (
         <ControlPanel
           distance={currentRoute.distance}
           duration={currentRoute.duration}
           routeStatus={currentRoute.status}
           hasAlternative={alternativeRoute !== null}
-          onSwapRoute={() => {
-            if (alternativeRoute) {
-               setCurrentRoute(alternativeRoute);
-               setAlternativeRoute(currentRoute);
-            }
-          }}
-          onClear={() => {
-            setSelectedOrigin(null);
-            setSelectedDestination(null);
-            setCurrentRoute({ coordinates: [], segments: [], distance: 0, duration: 0, status: 'UNKNOWN' });
-            setAlternativeRoute(null);
-          }}
-          onRebuild={() => {
-             // to trigger rebuild we just trick the effect by toggling state or it will rebuild when deps change
-             // actually since preference/mode changes are in the deps of useEffect, it will auto rebuild!
-             // but if they click rebuild button manually? 
-             // We can just set currentRoute to empty which might not retrigger unless we add a state.
-             // Actually, when preference changes, the useEffect runs automatically.
+          onSwapRoute={swapAlternative}
+          onClear={clearRoute}
+          onRebuild={() => {}}
+        />
+      )}
+
+      {/* Inspect Panel */}
+      {appMode === 'INSPECT' && inspectedLocation && (
+        <InspectPanel
+          isInspecting={isInspecting}
+          inspectedStatus={inspectedStatus}
+          inspectError={inspectError}
+          bottomOffset={bottomOffset}
+          onClose={() => {
+            setInspectedLocation(null);
+            setInspectedStatus(null);
           }}
         />
       )}
-      
-      {renderInspectBottomBlock()}
     </View>
   );
 };
@@ -471,7 +268,9 @@ export const MapScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
   },
   settingsBtn: {
     position: 'absolute',
@@ -487,124 +286,13 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 5,
   },
-  map: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  topBarContainer: {
-    position: 'absolute',
-    top: 0,
-    width: '100%',
-    zIndex: 10,
-    alignItems: 'center',
-    paddingTop: 10,
-  },
-  topBarWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 24,
-    padding: 4,
-    height: 48,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  topBar: {
-    flexDirection: 'row'
-  },
-  modeButton: {
-    height: 40,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    justifyContent: 'center',
-  },
-  modeButtonActive: {
-    backgroundColor: '#1f2937',
-  },
-  modeButtonText: {
-    color: '#9ca3af',
-    fontWeight: '600',
-  },
-  modeButtonTextActive: {
-    color: '#ffffff',
-  },
-  searchIconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 4,
-  },
-  searchBarContainer: {
-    width: '90%',
-    backgroundColor: 'transparent',
-  },
-  searchInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  searchIconLeft: {
-    marginRight: 8,
-  },
-  searchInputSingle: {
-    flex: 1,
-    fontSize: 16,
-    color: '#0f172a',
-  },
-  searchResultsContainer: {
-    marginTop: 8,
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    paddingVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
-    maxHeight: 250,
-  },
-  searchResultItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  searchResultIcon: {
-    marginRight: 12,
-  },
-  searchResultText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#1e293b',
-  },
-  instructionContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginTop: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  instructionText: {
-    color: '#334155',
-    fontWeight: '600',
-    fontSize: 12,
+  inspectMarkerPin: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(245, 158, 11, 0.3)',
+    borderWidth: 3,
+    borderColor: '#F59E0B',
   },
   loadingOverlay: {
     position: 'absolute',
@@ -623,7 +311,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontWeight: '600',
-    // color: '#F59E0B',
   },
   fetchingOverlay: {
     position: 'absolute',
@@ -659,79 +346,5 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     fontWeight: 'bold',
-  },
-  inspectMarkerPin: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(245, 158, 11, 0.3)',
-    borderWidth: 3,
-    borderColor: '#F59E0B',
-  },
-  inspectBottomBlock: {
-    position: 'absolute',
-    bottom: 40,
-    alignSelf: 'center',
-    width: '90%',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  inspectCloseBtn: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    zIndex: 10,
-    padding: 4,
-  },
-  inspectLoadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-  },
-  inspectLoadingText: {
-    color: '#8b7364ff',
-    marginLeft: 10,
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  inspectErrorText: {
-    color: '#ef4444',
-    fontSize: 15,
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  inspectTitle: {
-    color: '#0f172a',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  inspectStatusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  inspectStatusText: {
-    color: '#334155',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  inspectSubtext: {
-    color: '#64748b',
-    fontSize: 13,
-    marginTop: 4,
   },
 });
