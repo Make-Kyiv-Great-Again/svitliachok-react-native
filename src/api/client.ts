@@ -2,7 +2,7 @@ import axios from 'axios';
 import { StatusResponse, BuildingPolygon } from '../types/api';
 
 const API_BASE_URL = 'https://svitlo-finder.xyz/api/v1';
-const EXPO_PUBLIC_OVERPASS_URL = process.env.EXPO_PUBLIC_OVERPASS_URL || 'https://overpass-api.de';
+const EXPO_PUBLIC_OVERPASS_URL = 'https://svitlo-finder.xyz/overpass';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,

@@ -94,7 +94,7 @@ export async function verifyLampsForSegments(
     }).join('');
 
     const query = `[out:json][timeout:25]; (${aroundClauses}); out body;`;
-    const overpassUrl = process.env.EXPO_PUBLIC_OVERPASS_URL || 'https://overpass-api.de';
+    const overpassUrl = 'https://svitlo-finder.xyz/overpass';
 
     let attempts = 0;
     let fetchedLamps = false;
