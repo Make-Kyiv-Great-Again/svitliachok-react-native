@@ -18,43 +18,43 @@ export const calculateRoute = async (
     } else if (mode === 'Cycling') {
       baseUrl = 'https://routing.openstreetmap.de/routed-bike/route/v1/driving';
     }
-    
+
     let coordinatesStr = `${origin.longitude},${origin.latitude};`;
-    
+
     if (preference === 'Illuminated') {
-        let closestZoneDistance = Infinity;
-        let closestZone: BuildingPolygon | null = null;
-        
-        const midLat = (origin.latitude + destination.latitude) / 2;
-        const midLon = (origin.longitude + destination.longitude) / 2;
-        
-        for (const zone of buildingPolygons) {
-          if (zone.status === 'OFF' || zone.status === 'EMERGENCY') {
-            if (zone.coordinates.length > 0) {
-              const pt = zone.coordinates[0];
-              const distSq = Math.pow(midLat - pt.latitude, 2) + Math.pow(midLon - pt.longitude, 2);
-              if (distSq < closestZoneDistance) {
-                closestZoneDistance = distSq;
-                closestZone = zone;
-              }
+      let closestZoneDistance = Infinity;
+      let closestZone: BuildingPolygon | null = null;
+
+      const midLat = (origin.latitude + destination.latitude) / 2;
+      const midLon = (origin.longitude + destination.longitude) / 2;
+
+      for (const zone of buildingPolygons) {
+        if (zone.status === 'OFF' || zone.status === 'EMERGENCY') {
+          if (zone.coordinates.length > 0) {
+            const pt = zone.coordinates[0];
+            const distSq = Math.pow(midLat - pt.latitude, 2) + Math.pow(midLon - pt.longitude, 2);
+            if (distSq < closestZoneDistance) {
+              closestZoneDistance = distSq;
+              closestZone = zone;
             }
           }
         }
-        
-        // Detour
-        if (closestZoneDistance < 0.0004 && closestZone && closestZone.coordinates.length > 0) {
-             const pt = closestZone.coordinates[0];
-             coordinatesStr += `${pt.longitude + 0.01},${pt.latitude + 0.01};`;
-        }
+      }
+
+      // Detour
+      if (closestZoneDistance < 0.0004 && closestZone && closestZone.coordinates.length > 0) {
+        const pt = closestZone.coordinates[0];
+        coordinatesStr += `${pt.longitude + 0.01},${pt.latitude + 0.01};`;
+      }
     }
-    
+
     coordinatesStr += `${destination.longitude},${destination.latitude}`;
 
     const url = `${baseUrl}/${coordinatesStr}?overview=full&geometries=geojson`;
-    
+
     const response = await fetch(url);
     const data = await response.json();
-    
+
     if (data.routes && data.routes.length > 0) {
       const route = data.routes[0];
       const coords = route.geometry.coordinates;
@@ -66,14 +66,14 @@ export const calculateRoute = async (
       // Calculate path segments based on nearby buildings
       const segments: RouteSegment[] = [];
       let currentSegmentCoords: LatLng[] = [];
-      let currentSegmentStatus: 'SAFE' | 'UNKNOWN' | 'DANGER' | null = null;
+      let currentSegmentStatus: 'ON' | 'UNKNOWN' | 'OFF' | null = null;
       const DISTANCE_THRESHOLD_SQ = 0.000004; // 0.002^2
 
       for (const coord of formattedCoords) {
-        let coordStatus: 'SAFE' | 'UNKNOWN' | 'DANGER' = 'UNKNOWN';
+        let coordStatus: 'ON' | 'UNKNOWN' | 'OFF' = 'UNKNOWN';
         let foundSafe = false;
         let foundDanger = false;
-        
+
         for (const zone of buildingPolygons) {
           if (zone.coordinates.length > 0) {
             const pt = zone.coordinates[0];
@@ -88,9 +88,9 @@ export const calculateRoute = async (
             }
           }
         }
-        
-        if (foundDanger) coordStatus = 'DANGER';
-        else if (foundSafe) coordStatus = 'SAFE';
+
+        if (foundDanger) coordStatus = 'OFF';
+        else if (foundSafe) coordStatus = 'ON';
 
         if (currentSegmentStatus === null) {
           currentSegmentStatus = coordStatus;
@@ -108,9 +108,9 @@ export const calculateRoute = async (
         segments.push({ coordinates: currentSegmentCoords, status: currentSegmentStatus });
       }
 
-      let pathStatus: 'SAFE' | 'UNKNOWN' | 'DANGER' = 'SAFE';
-      if (segments.some(s => s.status === 'DANGER')) {
-        pathStatus = 'DANGER';
+      let pathStatus: 'ON' | 'UNKNOWN' | 'OFF' = 'ON';
+      if (segments.some(s => s.status === 'OFF')) {
+        pathStatus = 'OFF';
       } else if (segments.some(s => s.status === 'UNKNOWN')) {
         pathStatus = 'UNKNOWN';
       }

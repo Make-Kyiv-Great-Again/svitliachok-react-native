@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Marker, Polyline } from 'react-native-maps';
+import { Marker, Polyline, Circle } from 'react-native-maps';
 import { RouteResult } from '../types/routing';
 
 interface RouteLayerProps {
@@ -58,8 +58,8 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
             segment.status === 'DANGER'
               ? '#ef4444'
               : segment.status === 'UNKNOWN'
-              ? '#94a3b8'
-              : '#00e676'
+                ? '#94a3b8'
+                : '#00e676'
           }
           strokeWidth={6}
           lineJoin="round"
@@ -67,6 +67,37 @@ export const RouteLayer: React.FC<RouteLayerProps> = ({
           zIndex={1}
         />
       ))}
+
+      {currentRoute.lamps && currentRoute.lamps.map((lamp, index) => {
+        const isYellow = lamp.status === 'SAFE' || lamp.status === 'UNKNOWN';
+        const innerFill = isYellow ? 'rgba(253, 224, 71, 0.95)' : 'rgba(200, 200, 200, 0.9)';
+        const innerStroke = isYellow ? '#facc15' : '#a1a1aa'; // yellow-400 or zinc-400
+        const outerFill = isYellow ? 'rgba(253, 224, 71, 0.15)' : 'rgba(200, 200, 200, 0.1)';
+        const outerStroke = isYellow ? 'rgba(234, 179, 8, 0.25)' : 'rgba(161, 161, 170, 0.2)';
+
+        return (
+          <React.Fragment key={`lamp-group-${lamp.latitude}-${lamp.longitude}-${index}`}>
+            {/* Outer Glow Halo */}
+            <Circle
+              center={lamp}
+              radius={10}
+              fillColor={outerFill}
+              strokeColor={outerStroke}
+              strokeWidth={1}
+              zIndex={2}
+            />
+            {/* Inner Shiny Bulb */}
+            <Circle
+              center={lamp}
+              radius={3}
+              fillColor={innerFill}
+              strokeColor={innerStroke}
+              strokeWidth={1.5}
+              zIndex={3}
+            />
+          </React.Fragment>
+        );
+      })}
     </>
   );
 };

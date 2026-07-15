@@ -2,6 +2,7 @@ import axios from 'axios';
 import { StatusResponse, BuildingPolygon } from '../types/api';
 
 const API_BASE_URL = 'https://svitlo-finder.xyz/api/v1';
+const EXPO_PUBLIC_OVERPASS_URL = process.env.EXPO_PUBLIC_OVERPASS_URL || 'https://overpass-api.de';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -9,7 +10,6 @@ export const apiClient = axios.create({
 });
 
 export const fetchStatusByCoordinates = async (lat: number, lon: number): Promise<StatusResponse> => {
-  console.log(`checking lat: ${lat} and lon: ${lon}`)
   const response = await apiClient.get<StatusResponse>('/status/coordinates', {
     params: { lat, lon },
   });
@@ -21,14 +21,24 @@ export const fetchBuildingsInRegion = async (
 ): Promise<BuildingPolygon[]> => {
   try {
     const query = `[out:json];way(${south},${west},${north},${east})["addr:housenumber"]["addr:street"];out geom;`;
-    const overpassUrl = 'https://overpass-api.de/api/interpreter';
-    const response = await axios.post(overpassUrl, `data=${encodeURIComponent(query)}`, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+
+    // Using a reliable Overpass interpreter endpoint
+    const overpassUrl = `${EXPO_PUBLIC_OVERPASS_URL}/api/interpreter`;
+
+    const response = await axios.post(
+      overpassUrl,
+      `data=${encodeURIComponent(query)}`,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          // Identify your app to prevent aggressive rate-limiting/blocking
+          'User-Agent': 'BuildingStatusApp/1.0 (contact: your-email@example.com)'
+        }
       }
-    });
+    );
 
     const data = response.data;
+    //('response:', response);
     const elements = data.elements || [];
 
     if (elements.length === 0) return [];

@@ -5,9 +5,16 @@ export interface RouteSegment {
   status: 'SAFE' | 'UNKNOWN' | 'DANGER';
 }
 
+export interface RouteLamp {
+  latitude: number;
+  longitude: number;
+  status: 'SAFE' | 'UNKNOWN' | 'DANGER';
+}
+
 export interface RouteResult {
   coordinates: LatLng[];
   segments: RouteSegment[];
+  lamps?: RouteLamp[];
   distance: number; // in meters
   duration: number; // in seconds
   status: 'SAFE' | 'UNKNOWN' | 'DANGER';

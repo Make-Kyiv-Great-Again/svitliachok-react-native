@@ -19,6 +19,7 @@ import { MapTopBar } from '../components/MapTopBar';
 import { InspectPanel } from '../components/InspectPanel';
 import { RouteLayer } from '../components/RouteLayer';
 import { SavedLocationsLayer } from '../components/SavedLocationsLayer';
+import { BuildingsLayer } from '../components/BuildingsLayer';
 import { SaveLocationSheet } from '../components/SaveLocationSheet';
 import { darkMapStyle } from '../theme/mapStyles';
 
@@ -103,7 +104,7 @@ export const MapScreen = () => {
       try {
         const result = await fetchStatusByCoordinates(coord.latitude, coord.longitude);
         //console.log('checked coords:', coord)
-        console.log('result:', result)
+        //console.log('result:', result)
         setInspectedStatus(result);
       } catch (err: any) {
         console.warn('Inspect error:', err);
@@ -121,6 +122,8 @@ export const MapScreen = () => {
   };
 
   const handleRegionChange = async (region: Region) => {
+    // Commented out to avoid scanning every building during map movement
+
     if (region.latitudeDelta > 0.05) return;
     const south = region.latitude - region.latitudeDelta / 2;
     const north = region.latitude + region.latitudeDelta / 2;
@@ -129,6 +132,7 @@ export const MapScreen = () => {
     setIsFetchingBuildings(true);
     await syncOutagesForRegion(south, west, north, east);
     setIsFetchingBuildings(false);
+
   };
 
   const handleSelectSearchResult = async (result: any) => {
@@ -192,6 +196,8 @@ export const MapScreen = () => {
             currentRoute={currentRoute}
           />
         )}
+
+        <BuildingsLayer buildings={buildingPolygons} />
 
         {/* Always show saved location pins */}
         <SavedLocationsLayer
