@@ -14,6 +14,9 @@ const lightColors = {
   iconActive: '#F59E0B',
   iconInactive: '#94a3b8',
   danger: '#ef4444',
+  statusOn: '#22c55e',
+  statusOff: '#ef4444',
+  statusUnknown: '#94a3b8',
   shadow: '#000000',
   divider: '#f1f5f9',
   mapStyle: 'light' as const,
@@ -32,6 +35,9 @@ const darkColors = {
   iconActive: '#F59E0B',
   iconInactive: '#64748b',
   danger: '#f87171',
+  statusOn: '#4ade80',
+  statusOff: '#f87171',
+  statusUnknown: '#64748b',
   shadow: '#000000',
   divider: '#334155',
   mapStyle: 'dark' as const,
@@ -41,8 +47,8 @@ export const useTheme = () => {
   const colorScheme = useColorScheme();
   const themePreference = useAppStore((state) => state.themePreference);
 
-  const isDarkMode = 
-    themePreference === 'dark' || 
+  const isDarkMode =
+    themePreference === 'dark' ||
     (themePreference === 'system' && colorScheme === 'dark');
 
   const colors = isDarkMode ? darkColors : lightColors;

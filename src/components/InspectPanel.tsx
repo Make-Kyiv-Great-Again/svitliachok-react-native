@@ -7,7 +7,7 @@ import { StatusResponse } from '../types/api';
 
 interface InspectPanelProps {
   isInspecting: boolean;
-  inspectedStatus: StatusResponse | null;
+  inspectedStatus: any | null;
   inspectError: string | null;
   bottomOffset: number;
   onClose: () => void;
@@ -29,6 +29,8 @@ export const InspectPanel: React.FC<InspectPanelProps> = ({
   const { t } = useTranslation();
   const { colors } = useTheme();
 
+  //console.log('quick check', inspectedStatus)
+
   return (
     <View style={[styles.container, { bottom: bottomOffset, backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
       <TouchableOpacity
@@ -48,23 +50,30 @@ export const InspectPanel: React.FC<InspectPanelProps> = ({
       ) : inspectedStatus ? (
         <View>
           <Text style={[styles.title, { color: colors.textPrimary }]}>
-            {inspectedStatus.address || 'Address Unknown'}
+            {inspectedStatus.street_name + ' ' + inspectedStatus.house_name || 'Address Unknown'}
           </Text>
           <View style={styles.statusRow}>
             <View
               style={[
                 styles.statusDot,
-                { backgroundColor: inspectedStatus.power_status === 'ON' ? colors.primary : colors.textSecondary },
+                {
+                  backgroundColor:
+                    inspectedStatus.power_status === 'ON'
+                      ? colors.statusOn
+                      : inspectedStatus.power_status === 'OFF' || inspectedStatus.power_status === 'EMERGENCY'
+                        ? colors.statusOff
+                        : colors.statusUnknown,
+                },
               ]}
             />
             <Text style={[styles.statusText, { color: colors.textPrimary }]}>
               {inspectedStatus.power_status === 'ON'
                 ? t('map.status.on')
                 : inspectedStatus.power_status === 'OFF'
-                ? t('map.status.off')
-                : inspectedStatus.power_status === 'EMERGENCY'
-                ? t('map.status.emergency')
-                : t('map.status.unknown')}
+                  ? t('map.status.off')
+                  : inspectedStatus.power_status === 'EMERGENCY'
+                    ? t('map.status.emergency')
+                    : t('map.status.unknown')}
             </Text>
           </View>
           {inspectedStatus.status_reason && (

@@ -25,11 +25,13 @@ export interface GroupAssignment {
 
 export interface StatusResponse {
   region_id: number;
+  region_name: string;
   street_id: number;
+  street_name: string;
   house_id: number;
+  house_name: string;
   dso_id: number;
-  address: string;
-  group_info: GroupAssignment;
+  group_assignment: GroupAssignment;
   power_status: 'ON' | 'OFF' | 'EMERGENCY';
   status_reason: string;
   planned_schedule: PlannedOutageInfo | null;
@@ -37,7 +39,8 @@ export interface StatusResponse {
   has_power: boolean;
   group: string;
   last_update: string | null;
-  
+
+  address?: string;
   lat?: number;
   lon?: number;
 }

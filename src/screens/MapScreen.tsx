@@ -102,6 +102,8 @@ export const MapScreen = () => {
       setInspectedStatus(null);
       try {
         const result = await fetchStatusByCoordinates(coord.latitude, coord.longitude);
+        //console.log('checked coords:', coord)
+        console.log('result:', result)
         setInspectedStatus(result);
       } catch (err: any) {
         console.warn('Inspect error:', err);
@@ -162,8 +164,8 @@ export const MapScreen = () => {
   const topPadding = Math.max(insets.top, 10);
   const bottomOffset = Math.max(insets.bottom, 20);
 
-  const inspectedSavedLoc = inspectedLocation 
-    ? savedLocations.find(l => l.latitude === inspectedLocation.latitude && l.longitude === inspectedLocation.longitude) 
+  const inspectedSavedLoc = inspectedLocation
+    ? savedLocations.find(l => l.latitude === inspectedLocation.latitude && l.longitude === inspectedLocation.longitude)
     : null;
 
   return (
@@ -270,7 +272,7 @@ export const MapScreen = () => {
           hasAlternative={alternativeRoute !== null}
           onSwapRoute={swapAlternative}
           onClear={clearRoute}
-          onRebuild={() => {}}
+          onRebuild={() => { }}
         />
       )}
 
